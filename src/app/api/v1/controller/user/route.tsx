@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import DbConnect, { newPharmacyValidation } from "../../utils";
+import DbConnect, { MiddleWare, generateCode, generateId, newPharmacyValidation, sanitizeMessage, sendEmail } from "../../utils";
 import Pharmacy from "../../model/pharmacy";
+import Token from "../../model/token";
 import bcrypt from 'bcryptjs'
-import { Country} from 'country-state-city'
+import crypto from 'crypto';
+import Morgan from 'morgan'
 
 
 // DB CONNECTION
@@ -13,18 +15,16 @@ DbConnect()
 
 export async function POST(request:NextRequest) {
 
-    let responseData={
-        message:'',
-        success:false
-    }
+    let responseData:any
 
     const body=await request.json()
     const {searchParams}=new URL(request.url)
     const params=searchParams.get('action')
+    const morgan=Morgan('dev')
 
     if (params==='newPharmacy') {
-        
-        await newPharmacy(body)
+      MiddleWare(request,NextResponse,morgan)
+      responseData=await newPharmacy(body)
     }
     return NextResponse.json(responseData)
     
@@ -105,26 +105,141 @@ export async function DELETE(request:NextRequest) {
     
 }
 
+// CODE GENERATION
+
+async function generateUniqueCode(prefix: any) {
+  let code;
+  do {
+    code = await generateCode(prefix);
+  } while (await Pharmacy.findOne({ code }));
+
+  return code;
+}
+
+async function generateUniqueId(prefix: any) {
+  let id;
+  do {
+    id = await generateId(prefix);
+  } while (await Pharmacy.findOne({ id }));
+
+  return id;
+}
+
+export const tokenGeneration = async (id: any, emailToken: any) => {
+  try {
+    let token = await Token.findOne({ pharmacy: id });
+
+    if (token) {
+      await token.deleteOne();
+    }
+
+    await Token.create({
+      pharmacy: id,
+      token: emailToken,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 2880 * 60 * 1000, // 2880 minutes => 2 days
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 // EXTENSION FUNCTIONS OF HTTP METHODS
 
 export const newPharmacy=async(value: undefined)=>{
 
-    let responseData={
-        message:'',
-        success:false
-    }
+  let responseData={
+      message:'',
+      success:false
+  }
 
-    const validate=await newPharmacyValidation(value)
+  const validate=await newPharmacyValidation(value)
 
-    if (validate.error) {
-        console.log(validate.error);
-        responseData.message='Fill in all fields.'
+  if (validate.error) {
+      console.log(validate.error);
+      responseData.message='Fill in all fields.'      
 
-        return responseData
-        
-    }
+      return responseData
+  }
 
-    const body=validate.value
+  const body=validate.value
+
+  const promises=[
+    Pharmacy.findOne({email:body.email}).select('-password -_id'),
+    Pharmacy.findOne({mobile:body.mobile}).select('-password -_id'),
+    generateUniqueCode('P'),
+    generateUniqueId(1),
+  ]
+
+  const promise=await Promise.allSettled(promises)
+  console.log(promise);
+
+  const data=promise.filter((res)=> res.status==='fulfilled') as PromiseFulfilledResult<any>[]
+
+  console.log(data);
+  
+  const emailExist=data[0].value
+  const mobile=data[1].value
+  const code=data[2].value
+  const id=data[3].value
+
+  if (emailExist) {
+    responseData.message='Email has already been registered'
+    return responseData
+  }
+
+  if (mobile) {
+    responseData.message='Contact Number has already been registered'
+    return responseData
+  }
+
+  const insertPharmacy=await Pharmacy.create({
+    id,
+    code,
+    pharmacy:body.pharmacy,
+    mobile:body.mobile,
+    email:body.email,
+    password:body.password,
+    verified:false,
+    __v:0,
+  })
+
+  if (!insertPharmacy) {
+    responseData.message='Invalid data'
+    return responseData
+  }
+
+  let verifyToken = crypto.randomBytes(32).toString("hex") + insertPharmacy.id;
+    
+  await tokenGeneration(insertPharmacy._id, verifyToken);
+
+  const verifyUrl = `${process.env.WEB_URL}/sc/emailverify/${verifyToken}`;
+
+  const message=`
+  <h3>Registration of ${insertPharmacy.pharmacy}</h3>
+  <p>Thank you for registering in Pharmacy Management System.</p>
+  <p>Please use the link below to verify your Registration.</p>
+  <p>The verification link is valid for only 2 days.</p>
+  <p><a href=${verifyUrl} clicktracking=off>Click here</a> to verify your registration</p><br />
+  <p>If the above link is not working, plase copy and paste the below link in your browser.</p>
+  <p><a href=${verifyUrl} clicktracking=off>${verifyUrl}.</a></p><br />
+
+  <p>Kind Regards</P>
+  `
+
+  
+  const subject="Pharmacy Verification"
+  const send_to=insertPharmacy.email
+  const sent_from=process.env.EMAIL_USER
+
+  const sanitizedMessage = await sanitizeMessage(message);
+
+  sendEmail(subject,sanitizedMessage,send_to,sent_from)
+
+  responseData.success=true
+
+  return responseData
+    
 }
 
 // PHARMACY LOGIN

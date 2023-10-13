@@ -1,8 +1,8 @@
 'use client'
 
 import React from "react";
-import {SignInResponse, signIn} from 'next-auth/react'
-import toast, {Toaster} from 'react-hot-toast'
+import {signIn} from 'next-auth/react'
+import toast, { Toaster } from 'react-hot-toast'
 import { useRouter } from "next/navigation";
 
 let initialState = {
@@ -20,7 +20,7 @@ export default function Login(){
     const validate=async()=>{
 
         if(!formData.email){
-            toast.error("Username is required",{
+            toast.error("Email is required",{
                 id:toastId
             })
             return false
@@ -57,7 +57,7 @@ export default function Login(){
             })
 
             let info=await signIn('credentials',{
-                username:formData.email,
+                email:formData.email,
                 password:formData.password,
                 redirect:false
             })
@@ -68,15 +68,36 @@ export default function Login(){
                     id:toastId
                 })
             }
+            else{
+                router.push('/sc/user/dashboard')
+            }
 
-            router.push('/sc/user/dashboard')
         }
         
     };
 
-
     return (
         <>
+        <Toaster 
+
+        toastOptions={{
+            success:{
+                style:{
+                    background:'green',
+                    color:'white',
+                }
+            },
+            error:{
+                style:{
+                    background:'red',
+                    color:'white'
+                }
+            },
+            
+        }}
+
+        >
+        </Toaster>
         <section className="gradient-custom">
             <div className="container py-5 ">
                 <div className="row d-flex justify-content-center align-items-center">

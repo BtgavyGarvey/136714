@@ -92,10 +92,11 @@ export const sanitizeMessage=async(message: any) =>{
 
 export async function newPharmacyValidation (data: any){
     const schema = Joi.object({
-        memberNumber: Joi.string().trim().required(),
-        branch: Joi.string().trim().required(),
-        mission: Joi.string().trim().required(),
-        memberRole: Joi.string().trim(),
+        pharmacy: Joi.string().trim().required(),
+        mobile: Joi.string().trim().required(),
+        email: Joi.string().trim().required(),
+        password: Joi.string().trim().required(),
+        confirmPassword: Joi.string().trim()
     });
 
     return schema.validate(data);
@@ -131,8 +132,16 @@ export const upperCase=(value: string)=>{
 
 export const generateCode=async(value: any)=>{
     
-    let code=value+crypto.randomBytes(5).toString('hex');
+    let code=value+crypto.randomBytes(3).toString('hex');
     code=code.trim().toUpperCase();
+    return code;
+
+}
+
+export const generateId=async(value: any)=>{
+    
+    let code=value+crypto.randomBytes(11).toString('hex')+value;
+    code=code.trim().toLowerCase();
     return code;
 
 }

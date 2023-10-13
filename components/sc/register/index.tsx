@@ -75,23 +75,43 @@ export default function NewPharmacy(){
             })
 
             let response=await axios.post('/api/v1/controller/user?action=newPharmacy',formData)
-            
+            toast.dismiss(toastId)
             if (response.data.success===true) {
                     
-                toast.success(`Successful!`)
+                toast.success(`Successful!`,{id:toastId})
+                router.push('/sc/login')
             }
             else{
                 
-                toast.error(`Failed! ${response.data.message}`)
+                toast.error(`Failed! ${response.data.message}`,{id:toastId})
             }
 
-            router.push('/sc/user/dashboard')
         }
         
     };
 
     return (
         <>
+        <Toaster 
+
+        toastOptions={{
+            success:{
+                style:{
+                    background:'green',
+                    color:'white',
+                }
+            },
+            error:{
+                style:{
+                    background:'red',
+                    color:'white'
+                }
+            },
+            
+        }}
+
+        >
+        </Toaster>
         <section className="gradient-custom">
             <div className="container py-5 ">
                 <div className="row d-flex justify-content-center align-items-center">

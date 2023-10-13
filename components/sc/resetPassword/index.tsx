@@ -172,6 +172,26 @@ export default function ForgotPassword(){
 
     return (
         <>
+        <Toaster 
+
+        toastOptions={{
+            success:{
+                style:{
+                    background:'green',
+                    color:'white',
+                }
+            },
+            error:{
+                style:{
+                    background:'red',
+                    color:'white'
+                }
+            },
+            
+        }}
+
+        >
+        </Toaster>
         <section className="gradient-custom">
             <div className="container py-5 ">
                 <div className="row d-flex justify-content-center align-items-center">

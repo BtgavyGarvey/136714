@@ -13,30 +13,30 @@ const authOptions:AuthOptions={
         CredentialsProvider({
             type:'credentials',
             credentials:{email:{},password:{}},
-            async authorize(credentials,req){
+            async authorize(credentials,request){
 
-                let user:any
+                // let pharmacyData:any
                 
-                if (typeof credentials !=='undefined') {
+                // if (typeof credentials !=='undefined') {
 
-                    await DbConnect();
+                //     await DbConnect();
 
-                    user=await loginUser(credentials.email,credentials.password,req)
-                }
-                else{
-                    throw new Error('Invalid credentials')
-                }
+                //     pharmacyData=await loginUser(credentials.email,credentials.password,request)
+                // }
+                // else{
+                //     throw new Error('Invalid credentials')
+                // }
 
-                if (!user.success) {
-                    throw new Error(user.message)
-                }
+                // if (!pharmacyData.success) {
+                //     throw new Error(pharmacyData.message)
+                // }
                 
-                const userData=user.user
+                // return {
+                //     id:pharmacyData.pharmacy.id,
+                //     access:pharmacyData.access,
+                // }
 
-                return {
-                    id:userData._id,
-                    access:user.access,
-                }
+                return true
             }
         })
         
@@ -47,7 +47,7 @@ const authOptions:AuthOptions={
         signOut:'/'
     },
     callbacks:{
-        async jwt({token,user}){
+        async jwt({token,user}:any){
 
             if(user){
                 token.id=user.id
@@ -55,10 +55,9 @@ const authOptions:AuthOptions={
             }
             return token
         },
-        async session({session,token}){
-            if(session.user){
-                session.user.id=token.id
-                session.user.access=token.access
+        async session({session,token}:any){
+            if(token){
+                session.user=token.user
             } 
             return session
         }

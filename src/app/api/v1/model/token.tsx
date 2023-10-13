@@ -3,7 +3,7 @@ import mongoose, { Schema, model, models } from 'mongoose'
 
 const tokenSchema=new Schema({
 
-    id:{
+    pharmacy:{
         type:mongoose.Schema.Types.ObjectId,
         required:true,
     },
@@ -47,4 +47,4 @@ tokenSchema.pre('save', async function(next){
 })
 
 const Token=models.Token || model("Token",tokenSchema)
-module.exports=Token
+export default Token
