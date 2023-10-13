@@ -1,14 +1,11 @@
 'use client'
-import NewPharmacy from "../../components/sc/register";
-
+import Login from "../../components/sc/login";
 
 export default function Home(){
 
   return(
     <>
-    <div className="backgroundImage">
-      <NewPharmacy />
-    </div>
+      <Login />
     </>
   )
 }
