@@ -1,6 +1,6 @@
 import '../../css/globals.css'
 // import '../../css/index.css'
-// import '../../css/home.css'
+import '../../css/home.css'
 // import '../../css/sidenav.css'
 import '../../css/styles1.css'
 import 'bootstrap/dist/css/bootstrap.min.css'

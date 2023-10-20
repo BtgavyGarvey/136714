@@ -102,6 +102,21 @@ export async function newPharmacyValidation (data: any){
     return schema.validate(data);
 };
 
+export async function newMedicineValidation (data: any){
+    const schema = Joi.object({
+        pharmacy: Joi.string().trim().required(),
+        medicineName: Joi.string().trim().required(),
+        costPerUnit: Joi.number().required(),
+        dosageForm: Joi.string().trim().required(),
+        batchNumber: Joi.string().trim().required(),
+        expiresAt: Joi.date().required().required(),
+        medicineCategory: Joi.string().trim().required(),
+        availableQuantity: Joi.number().required()
+    });
+
+    return schema.validate(data);
+};
+
 export const sanitizeInput =async (input: string) => {
     // Remove unwanted characters and escape special characters
     const sanitizedInput = input

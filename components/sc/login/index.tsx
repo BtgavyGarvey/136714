@@ -61,6 +61,8 @@ export default function Login(){
                 password:formData.password,
                 redirect:false
             })
+            console.log(info);
+
             toast.dismiss(toastId)
         
             if ((info && !info.ok)) {
@@ -69,7 +71,7 @@ export default function Login(){
                 })
             }
             else{
-                router.push('/sc/user/dashboard')
+                router.push('/sc/user/dashboard#first')
             }
 
         }

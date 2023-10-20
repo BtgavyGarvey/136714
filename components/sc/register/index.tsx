@@ -74,12 +74,12 @@ export default function NewPharmacy(){
                 id:toastId
             })
 
-            let response=await axios.post('/api/v1/controller/user?action=newPharmacy',formData)
+            let response=await axios.post('/api/v1/controller/user?action=newPharmacy',formData)            
             toast.dismiss(toastId)
             if (response.data.success===true) {
                     
                 toast.success(`Successful!`,{id:toastId})
-                router.push('/sc/login')
+                router.push('/')
             }
             else{
                 

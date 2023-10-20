@@ -41,7 +41,7 @@ const pharmacySchema=new Schema({
         type: Number,
         default:0,
     }
-})
+},{timestamps:true})
 
 pharmacySchema.index({id:1,pharmacy:1,email:1,code:1})
 

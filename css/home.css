@@ -1,143 +1,133 @@
-html, body {
-  height: 100vh;
-}
-
-.container-fluid {
-  margin-left: 15%;
-  width: 85%;
-  background: #f1f3f6;
-  padding: 1px 0 0 0;
-  flex: 1 0 auto;
-}
-
-.container {
+* {
   margin: 0;
-  max-width: 98%;
-  margin: 1%;
-  background-color: #ffffff;
-  border-radius: 5px;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.user_options button {
-  max-width: 50px;
-  max-height: 50px;
-  font-size: 36px;
-  background-color: #ffffff;
-  color: #ff5252;
-  border: none;
-  outline: none;
+:root {
+--primary-color: #ffffff;
+--secondary-color: #422C73;
+--complimentary-color: #88BFB5;
+--contrast-color: #F2E527;
+--light-color: #D2A9D9;
 }
 
-.user_options button > i:hover {
-  animation-name: rotate_wheel;
-  animation-duration: 2s;
+/* .container {
+  background: #191919;
+  min-height: 100vh;
+  font-family: Montserrat, sans-serif;
+} */
+
+.nav a {
+    font-size: 40px;
+    color: #fff;
+    text-decoration: none;
+    padding: 20px;
+    text-align: center;
 }
 
-@keyframes rotate_wheel {
-  0%    { transform: rotate(0deg); }
-  100%  { transform: rotate(360deg); }
+.nav {
+    top: 9%;
+    position: fixed;
+    left: 0;
+    z-index: 50;
+    display: flex;
+    justify-content: space-around;
+    flex-direction: column;
+    height: 91vh;
+    background: var(--secondary-color);
 }
 
-.user_options button:focus {
-  color: #02b6ff;
+.nav_section {
+    position: absolute;
+    top: 0;
+    min-height: 100vh;
+    width: 0;
+    opacity: 0;
+    transition: all ease-in .5s;
+    /* display: flex;
+    justify-content: center;
+    align-items: center; */
+} 
+
+.nav_section h1 {
+    color: #fff;
+    font-size: 50px;
+    text-transform: uppercase;
+    opacity: 0;
 }
 
-#mark {
-  display: none;
-  position: fixed;
-  transform: translate(40px, -24px);
+
+.nav_section:target {
+    opacity: 1;
+    position: absolute;
+    left: 0;
+    width: 93.5%;
+    /* height: 100%; */
+    z-index: 10;
+    left: 6.5%;
 }
 
-.user_options .options {
-  position: fixed;
-  right: 1%;
-  top : 12%;
-  background-color: #111111;
-  border-radius: 10px;
-  z-index: 1;
+.nav_section:target h1 {
+    opacity: 0;
+    animation: 2s fadeIn forwards .5s;
 }
 
-.options li {
-  margin: 15px;
+#first {
+  background:wheat;
+}
+#second {
+    background: var(--complimentary-color);
 }
 
-.options li > a {
-  color: #eeeeee;
-  text-decoration: none;
+#third {
+    background: var(--contrast-color);
 }
 
-.options li > a > span {
-  margin-left: 10px;
+#fourth {
+    background: var(--light-color);
 }
 
-.options a:hover {
-  color: #ff5252;
+#fifth {
+  background: var(--primary-color);
 }
 
-.options a:focus {
-  color: #02b6ff;
+.main-dashboard{
+  display: flex;
+  width: 100%;
+  margin-top: 5%;
 }
 
 .dashboard-stats {
-  background-color: #f1f3f6;
-  margin: 2%;
+  background-color: #e4e6e8;
+  margin: 3%;
   padding: 15px;
   border-radius: 5px;
-  border: 1px solid #02b6ff;
+  border: 2px solid #02b6ff;
   cursor: pointer;
 }
 
-.todays-report {
-  margin: 2% 0;
-  padding: 5%;
-  border-radius: 5px;
-  border: 1px solid #ff5252;
+.chartjs {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
-#add_new_customer_model, #add_new_supplier_model, #add_new_medicine_model {
-  display: none;
-  position: fixed;
-  z-index: 999;
-  background-color: rgba(0,0,0,0.4);
-  width: 100vw;
-  height: 100vh;
+.chart-container {
+  margin-bottom: 3rem;
+  margin-left: 2rem;
+  margin-top: 5rem;
+  width: 45%;
 }
 
-.modal-dialog {
-  position: fixed;
-  width: 100%;
-  left: 50%;
-  transform: translateX(-50%);
+@keyframes fadeIn {
+    100% { opacity:1 }
 }
 
-/* Chrome, Safari, Edge, Opera */
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+@media(max-width:40em){
+  .main-dashboard{
+    display: block;
+    width: 100%;
+  }
 }
 
-/* Firefox */
-input[type=number] {
-  -moz-appearance: textfield;
-}
-
-/* width */
-::-webkit-scrollbar {
-  width: 5px;
-}
-
-/* Track */
-::-webkit-scrollbar-track {
-  background: #f1f3f6;
-}
-
-/* Handle */
-::-webkit-scrollbar-thumb {
-  background: #ff5252;
-}
-
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}

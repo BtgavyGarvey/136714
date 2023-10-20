@@ -1,16 +1,15 @@
 import { redirect } from "next/navigation"
 import { getServerSession } from 'next-auth/next'
-import Dashboard from "../../../../../components/sc/user/dashboard"
 import { useSession } from "next-auth/react"
-import Loader from "../../../../../components/sc/loader/Loader"
+import Loader from "../../../../../../components/sc/loader/Loader"
 import { NextRequest } from "next/server"
 import authOptions from "@/app/api/auth/[...nextauth]/options"
-import SideNav from "../../../../../components/sc/layout/sideNav"
-// 
+import SideNav from "../../../../../../components/sc/layout/sideNav"
+import SaleMedicinePage from "../../../../../../components/sc/user/medicine/sales/page"
+
 export default async function DashboardPage(req:NextRequest): Promise<any>{
 
   const session = await getServerSession(authOptions)
-  console.log(session);
 
   const toLoginPage=()=>{
     redirect('/')
@@ -22,7 +21,7 @@ export default async function DashboardPage(req:NextRequest): Promise<any>{
         session !==null ? (
           <>
             <SideNav pharm={session.user}/>
-            <Dashboard  pharm={session.user}/>
+            <SaleMedicinePage  pharm={session.user}/>
           
           </>
         ):(
