@@ -4,12 +4,12 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-export default function RadarChart({ chartData }:any) {
+export default function RadarChart({ chartDataHour }:any) {
   return (
     <div className="chart-container">
       <h2 style={{ textAlign: "center" }}>Radar Chart</h2>
       <Radar
-        data={chartData}
+        data={chartDataHour}
         options={{
           plugins: {
             title: {
@@ -17,7 +17,7 @@ export default function RadarChart({ chartData }:any) {
               text: "Users Gained between 2016-2020"
             },
             legend: {
-              display: false
+              display: true
             }
           }
         }}

@@ -8,8 +8,6 @@ import authOptions from "./api/auth/[...nextauth]/options";
 export default async function Home(req:NextRequest): Promise<any>{
 
   const session = await getServerSession(authOptions)
-
-  // console.log(session);
   
 
   const toLoginPage=()=>{

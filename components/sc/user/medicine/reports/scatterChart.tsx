@@ -4,12 +4,12 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-export default function ScatterChart({ chartData }:any) {
+export default function ScatterChart({ chartDataHour ,options}:any) {
   return (
     <div className="chart-container">
       <h2 style={{ textAlign: "center" }}>Scatter Chart</h2>
       <Scatter
-        data={chartData}
+        data={chartDataHour}
         options={{
           plugins: {
             title: {
@@ -17,9 +17,11 @@ export default function ScatterChart({ chartData }:any) {
               text: "Users Gained between 2016-2020"
             },
             legend: {
-              display: false
+              display: true
             }
-          }
+          },
+          scales:options.scales
+          
         }}
       />
     </div>

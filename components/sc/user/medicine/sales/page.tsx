@@ -10,13 +10,13 @@ import toast, {Toaster} from 'react-hot-toast'
 import axios from "axios";
 import { confirmAlert } from 'react-confirm-alert'
 import { render } from "react-dom"
-import { DayTime } from "../../../layout/topNav"
+import { DayTime, Today } from "../../../layout/topNav"
 
 
-let sellData: { [x: string]: number }[]=[]
+let sellData: any[]=[]
 
 
-export default function ViewMedicinePage({pharm}:any) {
+export default function ViewMedicinePage({pharm, drugs}:any) {
 
     let toastId:any
 
@@ -30,62 +30,73 @@ export default function ViewMedicinePage({pharm}:any) {
 
     }
 
-    const [result, setResult]=React.useState([])
-
-    const pharmacyName=pharm.name
-
-    if (result) {
-
-        (result: any) => [...Array(result)].map((_, i) =>{
-            checkRef[`checkBox${i}`]=React.useRef()
-            inputRef[`input${i}`]=React.useRef()
-            totalState[`total${i}`]=''
-        });
-
-        // for (let i = 0; i < result.length; i++) {
-            
-        // }
-    }
-
-    React.useEffect(()=>{
-
-        (result: { [x: string]: number }[]) => [...Array(result)].map((_, i) =>{
-            inputRef[`input${i}`].current.readOnly=true
-            saveBtn.current.disabled=true
-            result[i]['quantitySold']=0
-            result[i]['totalPrice']=0
-        });
-
-    },[])
-
     const paidAmount=React.useRef()
     const saveBtn=React.useRef()
+    const dialogBox=React.useRef()
     const [total, setTotal]=React.useState(totalState)
     const [change, setChange]=React.useState()
     const [total_Price, setTotal_Price]=React.useState(0)
+    const [result, setResult]=React.useState(drugs)
 
-    const router=useRouter()
+    if (result) {
 
-    React.useEffect(()=>{
-        getMedicineData()
-    },[])
-
-    const getMedicineData=async()=>{
-        toastId=toast.loading('Loading, please wait...',{
-            id:toastId
-        })
-
-        let response=await axios.get(`/api/v1/controller/medicine?action=getMedicineData&pharmacy=${pharm.id}`)            
-        toast.dismiss(toastId)
-        if (response.data.success===true) {
-        //   toast.success(`Successful!`,{id:toastId})
-          setResult(response.data.drugs)
-        }
-        else{
-            
-            toast.error(`Failed! ${response.data.message}`,{id:toastId})
+        for (let i = 0; i < result.length; i++) {
+            checkRef[`checkBox${i}`]=React.useRef()
+            inputRef[`input${i}`]=React.useRef()
+            totalState[`total${i}`]=''
         }
     }
+
+    const getDrugsData=async()=>{
+
+        let response=await axios.get(`/api/v1/controller/medicine?action=getMedicineData&id=${pharm.id}`)
+        
+        if (response.data.success===true) {
+            setResult(response.data.drugs)
+        }
+        else{
+
+            toast.error(`Failed to reload medicine data`,{id:toastId})
+        }
+
+    }
+
+    React.useEffect(()=>{
+        dialogBox.current.close()
+
+        if (result) {
+            for (let i = 0; i < result.length; i++) {
+                inputRef[`input${i}`].current.readOnly=true
+                saveBtn.current.disabled=true
+                result[i]['quantitySold']=0
+                result[i]['totalPrice']=0
+                result[i]['sellingTime']=Today()
+            }
+        }
+    },[])
+
+    const readOnly=()=>{
+        if (result) {
+            for (let i = 0; i < result.length; i++) {
+                inputRef[`input${i}`].current.readOnly=true
+                checkRef[`checkBox${i}`].current.checked=false
+                inputRef[`input${i}`].current.value=''
+                saveBtn.current.disabled=true
+                result[i]['quantitySold']=0
+                result[i]['totalPrice']=0
+                result[i]['sellingTime']=Today()
+                setTotal_Price(0)
+                // paidAmount.current.value=''
+                setTotal((prev)=>({
+                    ...prev,
+                    [`total${i}`]:''
+                }))
+
+            }
+        }
+    }
+
+    const router=useRouter()
 
     const handleInputChange=(val:any)=>{
 
@@ -97,12 +108,12 @@ export default function ViewMedicinePage({pharm}:any) {
         }
         else{
 
-            if (quantityEntered > result[val]['quantity']) {
+            if (quantityEntered > result[val].availableQuantity) {
                 toast.error('Insufficient Available Quantity',{id:toastId})
                 return
             }
 
-            let totalPrice=result[val].markedPrice * quantityEntered
+            let totalPrice=result[val].costPerUnit * quantityEntered
 
             result[val]['quantitySold']=parseFloat(quantityEntered)
             result[val]['totalPrice']=parseFloat(totalPrice)
@@ -117,16 +128,29 @@ export default function ViewMedicinePage({pharm}:any) {
 
     }
 
+    const reload=()=>{
+        dialogBox.current.close()
+        getDrugsData()
+
+        // router.push('/sc/user/medicine/sales#fourth')
+
+    }
+
+    // const insertItem=(arr: any,index: any,newItem: any)=>{
+    //     ...array.slice(0,index),
+    //     newItem,
+    //     ...array.slice(index)
+    // }
+
     const checkChange=(val:any)=>{
 
         if (checkRef[`checkBox${val}`].current.checked) {
             inputRef[`input${val}`].current.readOnly=false
             inputRef[`input${val}`].current.focus()
 
-            sellData.push(
-                result[val]
-            )
 
+            sellData.splice(val,0,result[val])
+            
             setTotal((prev)=>({
                 ...prev,
                 [`total${val}`]:0
@@ -148,8 +172,10 @@ export default function ViewMedicinePage({pharm}:any) {
             result[val]['quantitySold']=0
             result[val]['totalPrice']=0
 
-            Main()
         }
+
+        Main()
+
 
     }
 
@@ -164,9 +190,10 @@ export default function ViewMedicinePage({pharm}:any) {
                     <tr>
                     <td>{result[i].batchNumber}</td>
                     <td>{result[i].medicineName}</td>
+                    <td>{result[i].medicineCategory}</td>
                     <td>{result[i].availableQuantity}</td>
-                    <td>{(DayTime(result[i].expiresAt))}</td>
                     <td>{result[i].costPerUnit}</td>
+                    <td>{(DayTime(result[i].expiresAt))}</td>
                     <td ><input ref={inputRef[`input${i}`]} type="text" className="form-control" onChange={(e)=>handleInputChange(i)}></input></td>
                     <td>{total[`total${i}`]}</td>
                     <td><input ref={checkRef[`checkBox${i}`]} type="checkbox" onChange={(e)=>checkChange(i)}></input></td>
@@ -179,26 +206,30 @@ export default function ViewMedicinePage({pharm}:any) {
             
         }
 
-        
-
         return result1
     }
 
-    const submit=()=>{
+    const submit=async()=>{
         
-        console.log(sellData);
+        for (let i = 0; i < sellData.length; i++) {
+            sellData[i]['sellingTime']=Today()
+        }
 
-        // confirmAlert({
-        //     customUI:({onClose})=>{
-        //         return(
-        //             <div className="custom-ui">
-        //                 <h1>Successfull</h1>
-        //                 <button className="btn btn-success fw-bold" onClick={onClose}>Close</button>
-        //             </div>
-        //         )
-        //     }
-        // })
-        
+        toastId=toast.loading('Loading, please wait...',{
+            id:toastId
+        })
+
+        let response=await axios.post('/api/v1/controller/medicine?action=newSale',sellData)            
+        toast.dismiss(toastId)
+        if (response.data.success===true) {
+          toast.success(`Successful!`,{id:toastId})
+            readOnly()
+            dialogBox.current.showModal()
+
+        }
+        else{
+            toast.error(`Failed! ${response.data.message}`,{id:toastId})
+        }
 
     }
     
@@ -221,10 +252,11 @@ export default function ViewMedicinePage({pharm}:any) {
                         <tr className="bg-secondary">
                         <th>Batch Number</th>
                         <th>Medicine Name</th>
+                        <th>Category</th>
                         <th>Ava. Quantity</th>
-                        <th>Expiry Date</th>
                         <th>Cost</th>
-                        <th style={{width:'15%'}}>Quantity Sold</th>
+                        <th>Expiry Date</th>
+                        <th style={{width:'12%'}}>Quantity Sold</th>
                         <th>Total Price</th>
                         <th style={{width:'3%'}}>Actions</th>
                         </tr>
@@ -257,7 +289,7 @@ export default function ViewMedicinePage({pharm}:any) {
                     </div>
                     <div>
                     <label className="fw-bold">Change</label>
-                    <input type="text" value={change} className="form-control form-control-lg text-danger fw-bold" readOnly={true}/>
+                    <input type="text" value={change?.toLocaleString()} className="form-control form-control-lg text-danger fw-bold" readOnly={true}/>
                     </div>
                 </div>
             </div>
@@ -307,7 +339,6 @@ export default function ViewMedicinePage({pharm}:any) {
 
     }
 
-
     const Main=()=>{
 
     let currentPrice=0
@@ -346,9 +377,25 @@ export default function ViewMedicinePage({pharm}:any) {
         </Toaster>
         <div className= 'container'> 
             <section id= 'fourth' className="nav_section">
-            {
-                renderReportDashboard()
-            }
+                <div>
+                {
+                    renderReportDashboard()
+                }
+                <dialog className="dialog"  ref={dialogBox}>
+                    <div className="main-dashboard justify-content-center ">
+                    <h1 className="text-danger fw-bold">CHANGE</h1>
+
+                    </div>
+                    <div className="main-dashboard justify-content-center ">
+                    <h1 className="text-success fw-bold">{change?.toLocaleString()}</h1>
+
+                    </div>
+                    <div className="main-dashboard justify-content-center ">
+                        <button autoFocus className="btn btn-primary btn-lg fw-bold" onClick={reload}>CLOSE</button>
+                    </div>
+                    
+                </dialog>
+                </div>
         
             </section>
             

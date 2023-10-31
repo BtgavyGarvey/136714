@@ -1,3 +1,5 @@
+
+
 export const Data = [
   {
     id: 1,
@@ -30,3 +32,4 @@ export const Data = [
     userLost: 234
   }
 ];
+

@@ -13,7 +13,7 @@ const initialState={
   expiresAt:'',
   costPerUnit:'',
   pharmacy:'',
-  availableQuantity:''
+  availableQuantity:'',
 }
 
 export default function NewMedicinePage({pharm}:any) {
@@ -146,7 +146,6 @@ export default function NewMedicinePage({pharm}:any) {
               <select onChange={handleInputChange} className="form-control form-control-lg" name='medicineCategory'>
                 <option></option>
                 <option>M01AB</option>
-                <option>M01AE</option>
                 <option>M01AE</option>
                 <option>N02BE/B</option>
                 <option>N05B</option>

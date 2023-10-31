@@ -5,19 +5,26 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-export default function PieChart({ chartData }:any) {
+export default function PieChart({ chartDataHour, timeDate ,options}:any) {
+
+  // console.log(chartDataHour);
+  
   return (
     <div className="chart-container">
-      <h2 style={{ textAlign: "center" }}>Pie Chart</h2>
+      <h2 style={{ textAlign: "center" }}>Sales Per Drug Per Hour</h2>
       <Pie
-        data={chartData}
+        data={chartDataHour}
         options={{
           plugins: {
             title: {
               display: true,
-              text: "Users Gained between 2016-2020"
+              text: `Top 5 Drug Sales and Quantity Sold`
+            },
+            legend: {
+              display: true
             }
-          }
+          },
+
         }}
       />
     </div>

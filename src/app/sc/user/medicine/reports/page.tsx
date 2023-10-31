@@ -4,6 +4,7 @@ import { NextRequest } from "next/server"
 import authOptions from "@/app/api/auth/[...nextauth]/options"
 import SideNav from "../../../../../../components/sc/layout/sideNav"
 import ReportsPage from "../../../../../../components/sc/user/medicine/reports/index"
+import { ReportData } from "./data"
 
 
 export default async function DashboardPage(req:NextRequest): Promise<any>{
@@ -14,13 +15,17 @@ export default async function DashboardPage(req:NextRequest): Promise<any>{
     redirect('/')
   }
 
+  let chartDataHour=await ReportData()
+  // console.log(chartDataHour);
+  
+
   return(
     <>
       {
         session !==null ? (
           <>
             <SideNav pharm={session.user}/>
-            <ReportsPage  pharm={session.user}/>
+            <ReportsPage  pharm={session.user} data={chartDataHour}/>
           </>
         ):(
           toLoginPage()

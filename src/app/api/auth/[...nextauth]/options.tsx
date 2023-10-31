@@ -6,7 +6,7 @@ import { loginUser } from "../../v1/controller/user/route";
 const authOptions:AuthOptions={
     session:{
         strategy:'jwt',
-        maxAge: 10*60
+        maxAge: 360*60
 
     },
     providers:[

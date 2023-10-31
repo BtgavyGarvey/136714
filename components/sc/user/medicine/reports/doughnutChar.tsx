@@ -4,20 +4,20 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-export default function DoughnutChart({ chartData }:any) {
+export default function DoughnutChart({ chartDataHour , timeDate}:any) {
   return (
     <div className="chart-container">
-      <h2 style={{ textAlign: "center" }}>Doughnut Chart</h2>
+      <h2 style={{ textAlign: "center" }}>{timeDate}</h2>
       <Doughnut
-        data={chartData}
+        data={chartDataHour}
         options={{
           plugins: {
             title: {
               display: true,
-              text: "Users Gained between 2016-2020"
+              text: "Drug Sales and Quantity Sold"
             },
             legend: {
-              display: false
+              display: true
             }
           }
         }}

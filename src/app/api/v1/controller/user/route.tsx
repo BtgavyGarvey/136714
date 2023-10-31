@@ -6,7 +6,6 @@ import bcrypt from 'bcryptjs'
 import crypto from 'crypto';
 import Morgan from 'morgan'
 
-
 // DB CONNECTION
 
 DbConnect()
@@ -47,10 +46,14 @@ export async function GET(request:NextRequest) {
 
     const {searchParams}=new URL(request.url)
     const params=searchParams.get('action')
+    const email=searchParams.get('email')
+    const password=searchParams.get('password')
+    const morgan=Morgan('dev')
 
-    if (params==='newPharmacy') {
-        
-        // await newPharmacy()
+    if (params==='login') {      
+      MiddleWare(request,NextResponse,morgan)
+      responseData=await loginUser2(email,password)
+      
     }
     return NextResponse.json(responseData)
     
@@ -170,7 +173,6 @@ export const newPharmacy=async(value: undefined)=>{
     }
 
     const body=validate.value
-    
 
     const promises=[
       Pharmacy.findOne({email:body.email}).select('-password -_id'),
@@ -258,7 +260,8 @@ export const newPharmacy=async(value: undefined)=>{
 
 // PHARMACY LOGIN
 
-export const loginUser = async (email: string, password: any, req: any) => {
+export const loginUser = async (email: any, password: any, req: any) => {
+  
   
     try {
       if (!email || !password) {
@@ -318,7 +321,86 @@ export const loginUser = async (email: string, password: any, req: any) => {
         success: false,
       };
     }
-  };
+};
+
+// PHARMACY LOGIN 2
+
+export const loginUser2 = async (email: string, password: any) => {
+  
+  let responseData={
+    message:'',
+    success:false
+  }
+  
+  try {
+    if (!email || !password) {
+        responseData.message= 'Please enter username and password'
+        return responseData
+    }
+
+    const pharmacy = await Pharmacy.findOne({ email });
+
+    if (!pharmacy) {
+        responseData.message= 'Invalid username or password'
+        return responseData
+    }
+
+    if (pharmacy.__v === -1) {
+        responseData.message= 'Invalid username or password'
+        return responseData
+    }
+
+    const validPassword = await bcrypt.compare(password, pharmacy.password);
+
+    if (validPassword) {
+      if (!pharmacy.verified) {
+          responseData.message= 'Email not verified. Please verify your email address'
+          return responseData
+      }
+
+      const randomNum = Math.floor(Math.random() * (99999 - 10000)) + 10000;
+      const  loginCode = 'P'+randomNum
+      const hashedToken = crypto.createHash("sha256").update(loginCode).digest('hex');
+
+      await Token.deleteMany({ pharmacy: pharmacy.id });
+
+      await Token.create({
+        pharmacy: pharmacy.id,
+        token: hashedToken,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 5 * (60 * 1000) // 5 minutes
+      });
+  
+      // Email the login code to the user
+      const message = `
+        <h2>Hello ${pharmacy.pharmacy}</h2>
+        <p>You requested a login code.</p>
+        <p>Please use the code below to login.</p>
+        <p>The login code is valid for only 5 minutes.</p><br />
+        <p>${loginCode}</p><br />
+        <p>Kind Regards</P>
+      `;
+      const subject = "Login Code";
+      const send_to = email;
+      const sent_from = process.env.EMAIL_USER;
+
+      const sanitizedMessage = await sanitizeMessage(message);
+
+      sendEmail(subject, sanitizedMessage, send_to, sent_from);
+
+      responseData.success=true
+      return responseData
+      
+    } else {
+      responseData.message= 'Invalid username or password'
+      return responseData
+    }
+  } catch (error) {
+    console.log('Error =>' + error);
+    responseData.message= 'Unknown server error has occurred'
+    return responseData
+  }
+};
   
   // LOGIN DETAILS - EXTENSION OF loginUser() FUNCTION
   

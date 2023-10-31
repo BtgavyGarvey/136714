@@ -15,6 +15,8 @@ import Analytics from '@vercel/analytics'
 
 config.autoAddCss=false
 
+// export const runtime='edge'
+
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {

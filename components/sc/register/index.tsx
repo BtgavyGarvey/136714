@@ -51,6 +51,13 @@ export default function NewPharmacy(){
             return false
         }
 
+        if (isNaN(formData.mobile)) {
+            toast.error("Invalid Contact Number",{
+                id:toastId
+            })
+            return false
+        }
+
         return true
     }
 

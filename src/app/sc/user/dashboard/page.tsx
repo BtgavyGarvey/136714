@@ -10,7 +10,6 @@ import SideNav from "../../../../../components/sc/layout/sideNav"
 export default async function DashboardPage(req:NextRequest): Promise<any>{
 
   const session = await getServerSession(authOptions)
-  console.log(session);
 
   const toLoginPage=()=>{
     redirect('/')
