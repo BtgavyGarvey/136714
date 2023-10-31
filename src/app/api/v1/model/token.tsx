@@ -28,6 +28,8 @@ const tokenSchema=new Schema({
         type: Number,
         default:0,
     }
+},{
+    timestamps:true
 })
 
 tokenSchema.index({id:1})

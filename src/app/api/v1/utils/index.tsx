@@ -93,10 +93,26 @@ export const sanitizeMessage=async(message: any) =>{
 export async function newPharmacyValidation (data: any){
     const schema = Joi.object({
         pharmacy: Joi.string().trim().required(),
-        mobile: Joi.string().trim().required(),
+        mobile: Joi.number().required(),
         email: Joi.string().trim().required(),
         password: Joi.string().trim().required(),
         confirmPassword: Joi.string().trim()
+    });
+
+    return schema.validate(data);
+};
+
+export async function newMedicineValidation (data: any){
+    
+    const schema = Joi.object({
+        pharmacy: Joi.string().trim().required(),
+        medicineName: Joi.string().trim().required(),
+        costPerUnit: Joi.number().required(),
+        dosageForm: Joi.string().trim().required(),
+        batchNumber: Joi.string().trim().required(),
+        expiresAt: Joi.date().required(),
+        medicineCategory: Joi.string().trim().required(),
+        availableQuantity: Joi.number().required()
     });
 
     return schema.validate(data);

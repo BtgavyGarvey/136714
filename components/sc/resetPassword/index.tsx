@@ -64,16 +64,11 @@ export default function ForgotPassword(){
 
     const confirmCode=async()=>{
 
-        if (codeDiv.current) codeDiv.current.style.pointerEvents='none'
-        if (passwordDiv.current) passwordDiv.current.style.display='block'
-        if (resetPassBtn.current) resetPassBtn.current.style.display='block'
-        if (confirmCodeBtn.current) confirmCodeBtn.current.style.display='none'
-
         if (formData.code.trim() !=="") {
 
             const data={
                 code:formData.code,
-                username:formData.email
+                email:formData.email
             }
 
             try {

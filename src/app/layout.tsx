@@ -1,6 +1,6 @@
 import '../../css/globals.css'
 // import '../../css/index.css'
-// import '../../css/home.css'
+import '../../css/home.css'
 // import '../../css/sidenav.css'
 import '../../css/styles1.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -14,6 +14,8 @@ import { NextAuthProvider } from '../../components/middlewareAuths/nextAuthProvi
 import Analytics from '@vercel/analytics'
 
 config.autoAddCss=false
+
+// export const runtime='edge'
 
 const inter = Inter({ subsets: ['latin'] })
 

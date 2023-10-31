@@ -4,6 +4,7 @@ import React from "react";
 import {signIn} from 'next-auth/react'
 import toast, { Toaster } from 'react-hot-toast'
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 let initialState = {
     password: "",
@@ -51,25 +52,68 @@ export default function Login(){
 
         const valid=await validate()
 
+
         if (valid) {
             toastId=toast.loading('Loading, please wait...',{
                 id:toastId
             })
 
-            let info=await signIn('credentials',{
-                email:formData.email,
-                password:formData.password,
-                redirect:false
-            })
-            toast.dismiss(toastId)
-        
-            if ((info && !info.ok)) {
-                toastId=toast.error(info.error,{
+            let response=await axios.get(`/api/v1/controller/user?action=login&email=${formData.email}&password=${formData.password}`)
+
+            if (response.data.success===true) {
+                    
+                toast.success(`Successful! Login code has been sent to your email`,{id:toastId})
+
+                let code:any
+
+                do{
+                    code=prompt('Enter Login Code')
+                }while (!code)
+
+                toastId=toast.loading('Loading, please wait...',{
                     id:toastId
                 })
+
+                if (code !==null || code !=='') {
+
+                    let codeData = {
+                        email:formData.email,
+                        code:code
+                    };
+
+                    const confirmCode=await axios.post(`/api/v1/controller/user?action=checkcode`,codeData)
+
+                    if (confirmCode.data.success===true) {
+
+                        let info=await signIn('credentials',{
+                            email:formData.email,
+                            password:formData.password,
+                            redirect:false
+                        })
+            
+                        toast.dismiss(toastId)
+                    
+                        if ((info && !info.ok)) {
+                            toastId=toast.error(info.error,{
+                                id:toastId
+                            })
+                        }
+                        else{
+                            router.push('/sc/user/dashboard#first')
+                        }
+                    }
+                    else{
+
+                        toast.error(`Failed! ${confirmCode.data.message}`,{id:toastId})
+
+                    }
+                    
+                } 
+                
             }
             else{
-                router.push('/sc/user/dashboard')
+                
+                toast.error(`Failed! ${response.data.message}`,{id:toastId})
             }
 
         }
