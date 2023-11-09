@@ -51,7 +51,7 @@ export async function GET(request:NextRequest) {
 
     const {searchParams}=new URL(request.url)
     const action=searchParams.get('action')
-    const id=searchParams.get('id')
+    const id=searchParams.get('pharmacy')
     const morgan=Morgan('dev')
 
     if (action==='getMedicineData') {
@@ -78,16 +78,16 @@ export async function PATCH(request:NextRequest) {
 
     let responseData:any
 
+    const body=await request.json()
     const {searchParams}=new URL(request.url)
     const action=searchParams.get('action')
-    const token=searchParams.get('token')
     const morgan=Morgan('dev')
 
-    if (action==='verifyemail') {
+    if (action==='editMedicineData') {
       
       MiddleWare(request,NextResponse,morgan)
         
-    //   responseData=await verifyEmail(token)
+      responseData=await editMedicineData(body)
     }
     return NextResponse.json(responseData)
     
@@ -116,13 +116,17 @@ export async function DELETE(request:NextRequest) {
         success:false
     }
 
-    // const body=await request.json()
     const {searchParams}=new URL(request.url)
     const params=searchParams.get('action')
+    const pharmacy=searchParams.get('pharmacy')
+    const medID=searchParams.get('medID')
+    const morgan=Morgan('dev')
 
-    if (params==='newPharmacy') {
+    if (params==='deleteMedicineData') {
         
-        // await newPharmacy(body)
+        MiddleWare(request,NextResponse,morgan)
+        
+      responseData=await deleteMedicineData(pharmacy,medID)
     }
     return NextResponse.json(responseData)
     
@@ -153,7 +157,7 @@ export const newMedicine=async(value:any)=>{
         
       
         const promises=[
-          NewMedicine.findOne({batchNumber:body.batchNumber.toUpperCase()}),
+          NewMedicine.findOne({batchNumber:body.batchNumber.toUpperCase(),__v:0}),
         ]
       
         const promise=await Promise.allSettled(promises)
@@ -210,7 +214,7 @@ export const getMedicineData=async(value:any)=>{
 
     try {
         
-        let drugs=await NewMedicine.find()
+        let drugs=await NewMedicine.find({pharmacy:value,__v:0})
 
         if (drugs.length>0) {
             
@@ -232,6 +236,67 @@ export const getMedicineData=async(value:any)=>{
     }
 }
 
+export const editMedicineData=async(body:any)=>{
+
+    let responseData={
+        message:'',
+        success:false,
+    }
+
+    try {
+        let editMedicine=await NewMedicine.findOneAndUpdate(
+            {pharmacy:body.pharmacy, batchNumber:body.batchNumber},{$set:{...body}},{new:true}
+        )
+
+        if (editMedicine) {
+            
+            responseData.success=true
+        }
+        else{
+            responseData.message='Invalid medicine data'
+        }
+
+        return responseData
+        
+    } catch (error) {
+        console.log(error);
+        responseData.message='Server error has ocurred.'      
+    
+        return responseData
+    }
+
+}
+
+export const deleteMedicineData=async(pharmacy:any,medID:any)=>{
+
+    let responseData={
+        message:'',
+        success:false,
+    }
+
+    try {
+        let deleteMedicine=await NewMedicine.findOneAndUpdate(
+            {pharmacy, batchNumber:medID},{$set:{__v:1}},{new:true}
+        )
+
+        if (deleteMedicine) {
+            responseData.success=true
+        }
+        else{
+            responseData.message='Invalid medicine data'
+        }
+
+        return responseData
+        
+    } catch (error) {
+        console.log(error);
+        responseData.message='Server error has ocurred.'      
+    
+        return responseData
+    }
+
+}
+
 export const newSale=async(value:any)=>{
 
     let responseData={
@@ -243,7 +308,7 @@ export const newSale=async(value:any)=>{
         
         const body=value
 
-        let isToday=await Sales.findOne({pharmacy:body[0].pharmacy})
+        let isToday=await Sales.findOne({pharmacy:body[0].pharmacy,__v:0})
 
         const pharmacy = body[0].pharmacy;
         const date = body[0].sellingTime.date;
@@ -257,6 +322,7 @@ export const newSale=async(value:any)=>{
                 'details.moreDateDetails.hour': hour,
                 },
                 {
+                
                 $push: {
                     'details.$[outer].moreDateDetails.$[hour].moreHourDetails': {
                     $each: body.map((result:any) => ({
@@ -290,6 +356,7 @@ export const newSale=async(value:any)=>{
                         $push: {
                           'details.$[outer].moreDateDetails': {
                             hour:body[0].sellingTime.hour,
+                            medicineCategoryTotal:[],
                             moreHourDetails:[],
                             }
                         },
@@ -395,7 +462,7 @@ export const getDashboardData = async (id:any) => {
 
       const pipeline = [
         {
-          $match: {pharmacy:new mongoose.Types.ObjectId(id), __v: { $not: { $eq: -1 } }},
+          $match: {pharmacy:new mongoose.Types.ObjectId(id), __v:0},
         },
         {
           $group: {
@@ -443,7 +510,7 @@ export const getDashboardData = async (id:any) => {
         hourSales: {
             $sum: {
             $cond: [
-                { $eq: ["$details.moreDateDetails.hour", dateHour.hour] },
+                { $and:[{$eq: ["$details.date", dateHour.date]},{$eq:["$details.moreDateDetails.hour", dateHour.hour]}] },
                 "$details.moreDateDetails.moreHourDetails.saleAmount",
                 0,
             ],
@@ -482,6 +549,10 @@ export const getDashboardData = async (id:any) => {
 
     const salesData = await Sales.aggregate(salesPipeline);
 
+    console.log(salesData);
+    
+
+
     if (salesData.length > 0) {
         todaySales = salesData[0].todaySales;
         weekSales = salesData[0].weekSales;
@@ -492,7 +563,7 @@ export const getDashboardData = async (id:any) => {
 
       const results = await NewMedicine.aggregate(pipeline);
       const expiredDrugs = await NewMedicine.find({
-        pharmacy:id, 
+        pharmacy:id,
         $or: [
           { expiresAt: { $eq: today } },
           { expiresAt: { $lt: today } },
@@ -570,6 +641,12 @@ export const getReportData = async (id:any) => {
         },
     },
     {
+        $sort:{"details.date":1}
+    },
+    {
+        $sort:{"details.moreDateDetails.hour":1}
+    },
+    {
         $group: {
         _id: {
             hour: "$details.moreDateDetails.hour",
@@ -602,3 +679,143 @@ export const getReportData = async (id:any) => {
         return responseData
     }
 };
+
+export const getCategoryData = async (id:any) => {
+
+    let responseData={
+        message:'',
+        success:false,
+        reports:[]
+    }
+
+    try {
+
+    let dateHour= Today()
+
+    const today = new Date();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay());
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const yearsAgo = new Date();
+    yearsAgo.setFullYear(today.getFullYear() - 5); // 5 years ago
+    
+    const salesPipeline = [
+    {
+        $match: { pharmacy: new mongoose.Types.ObjectId(id), __v: 0 },
+    },
+    {
+        $unwind: "$details",
+    },
+    {
+        $unwind: "$details.moreDateDetails",
+    },
+    {
+        $unwind: "$details.moreDateDetails.moreHourDetails",
+    },
+    {
+        $match: {
+            "details.date": { $gte: dateHour.yearsAgo}
+        },
+    },
+    {
+        $group: {
+        _id: {
+            hour: "$details.moreDateDetails.hour",
+            date: "$details.date",
+            thisWeek: { $gte: ["$details.date", dateHour.thisWeek] },
+            thisMonth: { $gte: ["$details.date", dateHour.thisMonth] },
+        },
+        documents: {
+            $push: "$$ROOT", // Store the original documents
+        },
+        },
+    },
+    {
+        $group: {
+        _id: null,
+        M01AB: {
+            $sum: {
+            $cond: [
+                { $and:[{$eq: ["$details.date", dateHour.date]},{$eq:["$details.moreDateDetails.hour", dateHour.hour]}] },
+                "$details.moreDateDetails.moreHourDetails.saleAmount",
+                0,
+            ],
+            },
+        },
+        M01AE: {
+            $sum: {
+            $cond: [
+                { $gte: ["$details.date", dateHour.date] },
+                "$details.moreDateDetails.moreHourDetails.saleAmount",
+                0,
+            ],
+            },
+        },
+        N05C: {
+            $sum: {
+            $cond: [
+                { $gte: ["$details.date", dateHour.thisWeek] },
+                "$details.moreDateDetails.moreHourDetails.saleAmount",
+                0,
+            ],
+            },
+        },
+        N05B: {
+            $sum: {
+            $cond: [
+                { $gte: ["$details.date", dateHour.thisMonth] },
+                "$details.moreDateDetails.moreHourDetails.saleAmount",
+                0,
+            ],
+            },
+        },
+        R03: {
+            $sum: {
+            $cond: [
+                { $gte: ["$details.date", dateHour.thisMonth] },
+                "$details.moreDateDetails.moreHourDetails.saleAmount",
+                0,
+            ],
+            },
+        },
+        R06: {
+            $sum: {
+            $cond: [
+                { $gte: ["$details.date", dateHour.thisMonth] },
+                "$details.moreDateDetails.moreHourDetails.saleAmount",
+                0,
+            ],
+            },
+        },
+        N02BEB: {
+            $sum: {
+            $cond: [
+                { $gte: ["$details.date", dateHour.thisMonth] },
+                "$details.moreDateDetails.moreHourDetails.saleAmount",
+                0,
+            ],
+            },
+        },
+        },
+    },
+    {
+        $project: {
+        _id: 0, 
+        documents: 1,
+        },
+    },
+    ];
+
+    const groupedDocuments = await Sales.aggregate(salesPipeline);
+
+    responseData.success=true
+    responseData.reports=groupedDocuments
+    return responseData
+
+    } catch (error) {
+        console.log(error);
+        responseData.message='Server error has ocurred.'      
+        return responseData
+    }
+};
+

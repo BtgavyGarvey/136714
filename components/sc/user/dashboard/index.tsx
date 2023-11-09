@@ -20,16 +20,16 @@ export default function Dashboard({pharm}:any) {
     
 
     const getDashboardData=async()=>{
-
+        let id
         try{
-
-            const response=await axios.get(`/api/v1/controller/medicine?action=getDashboardData&id=${pharm.id}`)
-            // toast(pharm.id)
+            id=toast.loading('Loading data. Please wait...',{id:id})
+            const response=await axios.get(`/api/v1/controller/medicine?action=getDashboardData&pharmacy=${pharm.id}`)
+            toast.dismiss(id)
             if(response.data.success){
                 setMydashboardData(response.data.totalData)
             }
             else{
-                console.log(response.data.message);
+                console.log(response.data.message,{id:id});
             }
         }
         catch(error){

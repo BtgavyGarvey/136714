@@ -107,6 +107,15 @@
   padding: 1em;
 }
 
+.dialog1{
+  width: 50%;
+  height: 65%;
+  margin-top: 10%;
+  margin-left: 20%;
+  /* margin-right: 25%; */
+  padding: 1em;
+}
+
 .dashboard-stats {
   background-color: #e4e6e8;
   margin: 3%;
@@ -127,6 +136,10 @@
   margin-left: 2rem;
   margin-top: 2rem;
   width: 45%;
+}
+
+.editA{
+  cursor: pointer;
 }
 
 @keyframes fadeIn {

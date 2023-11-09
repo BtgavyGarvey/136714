@@ -49,7 +49,7 @@ export default function ViewMedicinePage({pharm, drugs}:any) {
 
     const getDrugsData=async()=>{
 
-        let response=await axios.get(`/api/v1/controller/medicine?action=getMedicineData&id=${pharm.id}`)
+        let response=await axios.get(`/api/v1/controller/medicine?action=getMedicineData&pharmacy=${pharm.id}`)
         
         if (response.data.success===true) {
             setResult(response.data.drugs)
@@ -225,6 +225,7 @@ export default function ViewMedicinePage({pharm, drugs}:any) {
           toast.success(`Successful!`,{id:toastId})
             readOnly()
             dialogBox.current.showModal()
+            sellData=[]
 
         }
         else{
@@ -250,7 +251,7 @@ export default function ViewMedicinePage({pharm, drugs}:any) {
             	<table className="table table-bordered table-striped table-hover ">
                     <thead >
                         <tr className="bg-secondary">
-                        <th>Batch Number</th>
+                        <th>Medicine ID</th>
                         <th>Medicine Name</th>
                         <th>Category</th>
                         <th>Ava. Quantity</th>

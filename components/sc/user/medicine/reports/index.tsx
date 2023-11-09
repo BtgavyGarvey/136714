@@ -257,19 +257,19 @@ export default function ViewMedicinePage({pharm, data=[]}:any) {
     let DataQuantity:any
 
     if (value==='' || value===null) {
-      refDay.current=`Past 5 Years' Sales`
+      refDay.current=`Sales In The Past 5 Years`
       text.current='Years'
       label=data[5]?.map((item: { year: any; }) => item.year)
       DataSales=data[5]?.map((item: { saleAmount: any; }) => item.saleAmount)
       DataQuantity=data[5]?.map((item: { quantitySold: any; }) => item.quantitySold)
     }
-    else if (value==='Daily Sales') {
+    else if (value==='Sales Today') {
       text.current="Hours"
       label=data[1]?.map((item: { hour: any; }) => item.hour)
       DataSales=data[1]?.map((item: { saleAmount: any; }) => item.saleAmount)
       DataQuantity=data[1]?.map((item: { quantitySold: any; }) => item.quantitySold)
       
-    } else if (value==='Weekly Sales'){
+    } else if (value==='Sales This Week'){
       text.current="Dates"
 
       label=data[2]?.map((item: { date: any; }) => item.date)
@@ -277,13 +277,13 @@ export default function ViewMedicinePage({pharm, data=[]}:any) {
       DataQuantity=data[2]?.map((item: { quantitySold: any; }) => item.quantitySold)
       
     }
-    else if (value==='Monthly Sales'){
+    else if (value==='Sales This Month'){
       text.current='Weeks'
       label=data[3]?.map((item: { weekNumber: any; }) => item.weekNumber)
       DataSales=data[3]?.map((item: { saleAmount: any; }) => item.saleAmount)
       DataQuantity=data[3]?.map((item: { quantitySold: any; }) => item.quantitySold)
     }
-    else if (value==='Yearly Sales'){
+    else if (value==='Sales This Year'){
       text.current='Months'
       label=data[4]?.map((item: { month: any; }) => item.month)
       DataSales=data[4]?.map((item: { saleAmount: any; }) => item.saleAmount)
@@ -442,11 +442,11 @@ export default function ViewMedicinePage({pharm, data=[]}:any) {
               name="timeFrame"
             >
               <option ></option>
-              <option value={'Daily Sales'}>Daily Sales</option>
-              <option value={'Weekly Sales'}>Weekly Sales</option>
-              <option value={'Monthly Sales'}>Monthly Sales</option>
-              <option value={'Yearly Sales'}>Yearly Sales</option>
-              <option value={''}>Past 5 Years' Sales</option>
+              <option value={'Sales Today'}>Sales Today</option>
+              <option value={'Sales This Week'}>This Week</option>
+              <option value={'Sales This Month'}>Sales This Month</option>
+              <option value={'Sales This Year'}>Sales This Year</option>
+              <option value={''}>Sales In The Past 5 Years</option>
             </select>
             </div>
             </div>
