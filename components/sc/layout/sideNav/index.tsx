@@ -1,6 +1,6 @@
 'use client'
 
-import { faDashboard } from "@fortawesome/free-solid-svg-icons"
+import { faDashboard, faUsers } from "@fortawesome/free-solid-svg-icons"
 import { faAdd } from "@fortawesome/free-solid-svg-icons/faAdd"
 import { faBookMedical } from "@fortawesome/free-solid-svg-icons/faBookMedical"
 import { faFileMedicalAlt } from "@fortawesome/free-solid-svg-icons/faFileMedicalAlt"
@@ -18,7 +18,7 @@ export default function  SideNav({pharm}:any) {
         <nav className="navbar bg-info shadow d-flex fixed-top justify-content-between">
 
             <div className="justify-content-start navbar-toggler-div" style={{gap:'0.5em',marginLeft:'3%'}}>
-                <h3><span>{pharmacyName}</span></h3>
+                <h3><span>{pharmacyName} Pharmacy</span></h3>
             </div>
             <div className="d-flex justify-content-end" style={{gap:'0.5em',marginRight:'1%'}}>
                 <button className="btn btn-default text-danger fw-bold" onClick={signOut}>Log Out</button>
@@ -28,8 +28,9 @@ export default function  SideNav({pharm}:any) {
 
         <nav className="nav">
             <a href="/sc/user/dashboard#first" title="Dashboard"><FontAwesomeIcon icon={faDashboard}/></a>
-            <a href="/sc/user/medicine/new#second" title="New Medicine"><FontAwesomeIcon icon={faAdd}/></a>
-            <a href="/sc/user/medicine/view#third" title="Medicine Report"><FontAwesomeIcon icon={faBookMedical}/></a>
+            <a href="/sc/user/view#sixth" title="Users"><FontAwesomeIcon icon={faUsers}/></a>
+            {/* <a href="/sc/user/medicine/new#second" title="New Medicine"><FontAwesomeIcon icon={faAdd}/></a> */}
+            <a href="/sc/user/medicine/view#third" title="View Medicines"><FontAwesomeIcon icon={faBookMedical}/></a>
             <a href="/sc/user/medicine/sales#fourth" title="Make Sale"><FontAwesomeIcon icon={faFileMedicalAlt} /> </a>
             <a href="/sc/user/medicine/reports#fifth" title='Reports Dashboard'><FontAwesomeIcon icon={faLaptopMedical} /> </a>
         </nav>

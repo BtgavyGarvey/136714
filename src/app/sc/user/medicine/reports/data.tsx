@@ -3,6 +3,7 @@ import { getReportData } from "@/app/api/v1/controller/medicine/route"
 import { getServerSession } from "next-auth"
 import sugar from 'sugar'
 import { Today } from "../../../../../../components/sc/layout/topNav"
+import axios from "axios"
 
 
 function formatDate(inputDate:any) {
@@ -273,4 +274,19 @@ export const ReportData=async()=>{
       
     }
   
+}
+
+export const predict=async()=>{
+  const url = 'http://127.0.0.1:5000/api/v1/predict'
+  const data = {start_date: '2023-2-1', end_date: '2023-3-31', drug:3}  
+
+  try {
+    let response =await axios.post(url, data)
+    console.log(response.data)
+  } catch (error) {
+    console.log(error);
+    
   }
+
+  
+}

@@ -1,24 +1,19 @@
 import { redirect } from "next/navigation"
 import { getServerSession } from 'next-auth/next'
+import Users from "../../../../../components/sc/user/view/page"
+import { useSession } from "next-auth/react"
+import Loader from "../../../../../components/sc/loader/Loader"
 import { NextRequest } from "next/server"
 import authOptions from "@/app/api/auth/[...nextauth]/options"
-import SideNav from "../../../../../../components/sc/layout/sideNav"
-import ReportsPage from "../../../../../../components/sc/user/medicine/reports/index"
-import { ReportData, predict } from "./data"
-
-
-export default async function ReportPage(req:NextRequest): Promise<any>{
+import SideNav from "../../../../../components/sc/layout/sideNav"
+// 
+export default async function ViewUserPage(req:NextRequest): Promise<any>{
 
   const session = await getServerSession(authOptions)
 
   const toLoginPage=()=>{
     redirect('/')
   }
-  predict()
-
-  let chartDataHour=await ReportData()
-  // console.log(chartDataHour);
-  
 
   return(
     <>
@@ -26,7 +21,8 @@ export default async function ReportPage(req:NextRequest): Promise<any>{
         session !==null ? (
           <>
             <SideNav pharm={session.user}/>
-            <ReportsPage  pharm={session.user} data={chartDataHour}/>
+            <Users  pharm={session.user}/>
+          
           </>
         ):(
           toLoginPage()

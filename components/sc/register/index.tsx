@@ -6,10 +6,10 @@ import toast, {Toaster} from 'react-hot-toast'
 import axios from "axios";
 
 let initialState = {
-    password: "",
+    firstName: "",
     email:"",
     pharmacy:"",
-    confirmPassword:"",
+    lastName:"",
     mobile:"",
 };
 
@@ -25,9 +25,9 @@ export default function NewPharmacy(){
         if(
             !formData.email ||
             !formData.pharmacy ||
-            !formData.confirmPassword ||
+            !formData.lastName ||
             !formData.mobile ||
-            !formData.password 
+            !formData.firstName 
             ){
             toast.error("Please fill all required fields",{
                 id:toastId
@@ -42,13 +42,6 @@ export default function NewPharmacy(){
             ){
                 toast.error('Please enter a valid email address',{id:toastId})
                 return false
-        }
-
-        if(formData.password !== formData.confirmPassword){
-            toast.error("Password don't match",{
-                id:toastId
-            })
-            return false
         }
 
         if (isNaN(formData.mobile)) {
@@ -134,11 +127,19 @@ export default function NewPharmacy(){
                         </div>
 
                         <h2 className="fw-bold mb-3 text-uppercase text-warning">Sign Up</h2>
-                        <p className="text-white-50 mb-5">Please enter necessary pharmacy details!</p>
+                        <p className="text-white-50 mb-5">Please enter necessary user & pharmacy details!</p>
+
+                        <h6 className="fw-bold mb-3 text-uppercase text-warning">User Details</h6>
+
 
                         <div className="form-outline form-white mb-4">
-                            <input type="text" name="pharmacy" className="form-control form-control-lg" onChange={handleInputChange} required/>
-                            <label className="form-label" >Pharmacy Name</label>
+                            <input type="text" name="firstName" className="form-control form-control-lg" onChange={handleInputChange} required/>
+                            <label className="form-label">First Name</label>
+                        </div>
+
+                        <div className="form-outline form-white mb-4">
+                            <input type="text" name="lastName" className="form-control form-control-lg" onChange={handleInputChange} required/>
+                            <label className="form-label">Last Name</label>
                         </div>
 
                         <div className="form-outline form-white mb-4">
@@ -146,19 +147,16 @@ export default function NewPharmacy(){
                             <label className="form-label" >Email Address</label>
                         </div>
 
+                        <h6 className="fw-bold mb-3 text-uppercase text-warning">Pharmacy Details</h6>
+
+                        <div className="form-outline form-white mb-4">
+                            <input type="text" name="pharmacy" className="form-control form-control-lg" onChange={handleInputChange} required/>
+                            <label className="form-label" >Pharmacy Name</label>
+                        </div>
+
                         <div className="form-outline form-white mb-4">
                             <input type="text" name="mobile" className="form-control form-control-lg" onChange={handleInputChange} required/>
                             <label className="form-label" >Contact Number</label>
-                        </div>
-
-                        <div className="form-outline form-white mb-4">
-                            <input type="password" name="password" className="form-control form-control-lg" onChange={handleInputChange} required/>
-                            <label className="form-label">Password</label>
-                        </div>
-
-                        <div className="form-outline form-white mb-4">
-                            <input type="password" name="confirmPassword" className="form-control form-control-lg" onChange={handleInputChange} required/>
-                            <label className="form-label">Confirm Password</label>
                         </div>
 
                         <button className="btn btn-outline-light btn-lg px-5" type="submit" onClick={register}>Sign Up</button>

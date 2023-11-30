@@ -1,18 +1,30 @@
 import mongoose, { Schema, model, models } from 'mongoose'
 import bcrypt from 'bcryptjs'
 
-const pharmacySchema=new Schema({
+const userSchema=new Schema({
 
     id:{
         type:mongoose.Schema.Types.ObjectId,
         required:true,
     },
-    code:{
+    username:{
+        type:String,
+        required:true,
+    },
+    firstName:{
+        type:String,
+        required:true,
+    },
+    lastName:{
+        type:String,
+        required:true,
+    },
+    role:{
         type:String,
         required:true,
     },
     pharmacy:{
-        type:String,
+        type:mongoose.Schema.Types.ObjectId,
         required:true,
     },
     email:{
@@ -24,7 +36,7 @@ const pharmacySchema=new Schema({
             "Please enter a valid email"
         ],
     },
-    mobile:{
+    password:{
         type:String,
         required:true,
     },
@@ -39,8 +51,21 @@ const pharmacySchema=new Schema({
     }
 },{timestamps:true})
 
-pharmacySchema.index({id:1,pharmacy:1,email:1,code:1})
+userSchema.index({id:1,pharmacy:1,email:1,username:1})
 
+userSchema.pre('save', async function(next){
 
-const Pharmacy=models.Pharmacy || model("Pharmacy",pharmacySchema)
-export default Pharmacy
+    if(!this.isModified('password')){
+        return next()
+    }
+
+    const salt=await bcrypt.genSalt(10)
+    const hashedPassword=await bcrypt.hash(this.password,salt)
+    this.password=hashedPassword
+
+    next()
+
+})
+
+const User=models.User || model("User",userSchema)
+export default User

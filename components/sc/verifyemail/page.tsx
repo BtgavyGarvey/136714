@@ -12,6 +12,7 @@ export default function VerifyEmailPage(){
 
     const searchParams=useSearchParams()
     const token=searchParams.get('token')
+    const vr=searchParams.get('vr')
 
     const router=useRouter()
 
@@ -21,7 +22,7 @@ export default function VerifyEmailPage(){
         try {
 
             toastId=toast.loading('Please wait, Loading...',{id:toastId})
-            const response=await axios.patch(`/api/v1/controller/user?action=verifyemail&token=${token}`)
+            const response=await axios.patch(`/api/v1/controller/user?action=verifyemail&token=${token}&vr=${vr}`)
             toast.dismiss(toastId)
             console.log(response);
             

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import DbConnect, { MiddleWare, generateCode, generateId, newPharmacyValidation, sanitizeMessage, sendEmail } from "../../utils";
+import DbConnect, { MiddleWare, generateCode, generateId, newPharmacyValidation, newUserValidation, sanitizeMessage, sendEmail } from "../../utils";
 import Pharmacy from "../../model/pharmacy";
 import Token from "../../model/token";
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto';
 import Morgan from 'morgan'
+import User from "../../model/user";
 
 // DB CONNECTION
 
@@ -33,6 +34,10 @@ export async function POST(request:NextRequest) {
       MiddleWare(request,NextResponse,morgan)
       responseData=await checkResetPasswordCode(body)
     }
+    else if (params==='newUser') {
+      MiddleWare(request,NextResponse,morgan)
+      responseData=await newUser(body)
+    }
     return NextResponse.json(responseData)
     
 }
@@ -46,13 +51,19 @@ export async function GET(request:NextRequest) {
 
     const {searchParams}=new URL(request.url)
     const params=searchParams.get('action')
-    const email=searchParams.get('email')
+    const username=searchParams.get('username')
     const password=searchParams.get('password')
+    const pharmacy=searchParams.get('pharmacy')
     const morgan=Morgan('dev')
 
     if (params==='login') {      
       MiddleWare(request,NextResponse,morgan)
-      responseData=await loginUser2(email,password)
+      responseData=await loginUser2(username,password)
+      
+    }
+    else if (params==='getUserData') {      
+      MiddleWare(request,NextResponse,morgan)
+      responseData=await getUserData(pharmacy)
       
     }
     return NextResponse.json(responseData)
@@ -63,16 +74,25 @@ export async function PATCH(request:NextRequest) {
 
     let responseData:any
 
+
     const {searchParams}=new URL(request.url)
     const action=searchParams.get('action')
     const token=searchParams.get('token')
+    const vr=searchParams.get('vr')
     const morgan=Morgan('dev')
 
     if (action==='verifyemail') {
       
       MiddleWare(request,NextResponse,morgan)
         
-      responseData=await verifyEmail(token)
+      responseData=await verifyEmail(token,vr)
+    }
+    else if (action==='editUserData') {
+      const body=await request.json()
+      
+      MiddleWare(request,NextResponse,morgan)
+        
+      responseData=await editUserData(body)
     }
     return NextResponse.json(responseData)
     
@@ -101,13 +121,17 @@ export async function DELETE(request:NextRequest) {
         success:false
     }
 
-    // const body=await request.json()
     const {searchParams}=new URL(request.url)
     const params=searchParams.get('action')
+    const pharmacy=searchParams.get('pharmacy')
+    const username=searchParams.get('username')
+    const morgan=Morgan('dev')
 
-    if (params==='newPharmacy') {
+    if (params==='deleteUserData') {
         
-        // await newPharmacy(body)
+        MiddleWare(request,NextResponse,morgan)
+        
+      responseData=await deleteUserData(pharmacy,username)
     }
     return NextResponse.json(responseData)
     
@@ -133,16 +157,34 @@ async function generateUniqueId(prefix: any) {
   return id;
 }
 
+async function generateUniqueUsername() {
+  let username;
+  do {
+    username = Math.floor(Math.random() * 999999 - 111111 + 1) + 111111;
+  } while (await User.findOne({ username }));
+
+  return username;
+}
+
+async function generateUniqueUserId(prefix: any) {
+  let id;
+  do {
+    id = await generateId(prefix);
+  } while (await User.findOne({ id }));
+
+  return id;
+}
+
 export const tokenGeneration = async (id: any, emailToken: any) => {
   try {
-    let token = await Token.findOne({ pharmacy: id });
+    let token = await Token.findOne({ id });
 
     if (token) {
       await token.deleteOne();
     }
 
     await Token.create({
-      pharmacy: id,
+      id,
       token: emailToken,
       createdAt: Date.now(),
       expiresAt: Date.now() + 2880 * 60 * 1000, // 2880 minutes => 2 days
@@ -161,9 +203,15 @@ export const newPharmacy=async(value: undefined)=>{
       success:false
   }
 
+  let pharmValue={
+    mobile:value?.mobile,
+    pharmacy:value?.pharmacy,
+    email:value?.email,
+  }
+
   try {
 
-    const validate=await newPharmacyValidation(value)
+    const validate=await newPharmacyValidation(pharmValue)
 
     if (validate.error) {
         console.log(validate.error);
@@ -175,8 +223,8 @@ export const newPharmacy=async(value: undefined)=>{
     const body=validate.value
 
     const promises=[
-      Pharmacy.findOne({email:body.email}).select('-password -_id'),
-      Pharmacy.findOne({mobile:body.mobile}).select('-password -_id'),
+      Pharmacy.findOne({email:body.email}).select('-_id'),
+      Pharmacy.findOne({mobile:body.mobile}).select('-_id'),
       generateUniqueCode('P'),
       generateUniqueId(1),
     ]
@@ -192,7 +240,7 @@ export const newPharmacy=async(value: undefined)=>{
     const id=data[3].value
 
     if (emailExist) {
-      responseData.message='Email has already been registered'
+      responseData.message='Pharmacy email has already been registered'
       return responseData
     }
 
@@ -207,7 +255,6 @@ export const newPharmacy=async(value: undefined)=>{
       pharmacy:body.pharmacy,
       mobile:body.mobile,
       email:body.email,
-      password:body.password,
       verified:false,
       __v:0,
     })
@@ -217,14 +264,24 @@ export const newPharmacy=async(value: undefined)=>{
       return responseData
     }
 
+    let userValue={
+      firstName:value?.firstName,
+      lastName:value?.lastName,
+      email:value?.email,
+      pharmacy:JSON.stringify(insertPharmacy.id),
+      role:'Administrator'
+    }
+
+    await newUser(userValue)
+
     let verifyToken = crypto.randomBytes(32).toString("hex") + insertPharmacy.id;
       
     await tokenGeneration(insertPharmacy.id, verifyToken);
 
-    const verifyUrl = `${process.env.WEB_URL}/sc/verifyemail?token=${verifyToken}`;
+    const verifyUrl = `${process.env.WEB_URL}/sc/verifyemail?token=${verifyToken}&vr=pharmacy`;
 
     const message=`
-    <h3>Registration of ${insertPharmacy.pharmacy}</h3>
+    <h3>Registration of ${insertPharmacy.pharmacy} Pharmacy</h3>
     <p>Thank you for registering in Pharmacy Management System.</p>
     <p>Please use the link below to verify your Registration.</p>
     <p>The verification link is valid for only 2 days.</p>
@@ -258,44 +315,149 @@ export const newPharmacy=async(value: undefined)=>{
     
 }
 
-// PHARMACY LOGIN
+export const newUser=async(value: undefined)=>{
 
-export const loginUser = async (email: any, password: any, req: any) => {
+  let responseData={
+    message:'',
+    success:false
+  }
+
+  try {
+
+    const validate=await newUserValidation(value)
+
+    if (validate.error) {
+        console.log(validate.error);
+        responseData.message='Fill in all fields.'      
+
+        return responseData
+    }
+
+    const body=validate.value
+
+    const promises=[
+      User.findOne({email:body.email,__v:0}).select('-password -_id'),
+      Pharmacy.findOne({id:JSON.parse(body.pharmacy)}),
+      generateUniqueUsername(),
+      generateUniqueUserId(2),
+    ]
+
+    const promise=await Promise.allSettled(promises)
+
+    const data=promise.filter((res)=> res.status==='fulfilled') as PromiseFulfilledResult<any>[]
+
+    const emailExist=data[0].value
+    const pharmacy=data[1].value
+    const username=data[2].value
+    const id=data[3].value
+
+    if (emailExist) {
+      responseData.message='User email has already been registered'
+      return responseData
+    }
+
+    let password=crypto.randomBytes(4).toString('hex')
+
+    const insertUser=await User.create({
+      id,
+      username,
+      firstName:body.firstName,
+      lastName:body.lastName,
+      pharmacy:pharmacy.id,
+      role:body.role,
+      email:body.email,
+      password,
+      verified:false,
+      __v:0,
+    })
+
+    if (!insertUser) {
+      responseData.message='Invalid data'
+      return responseData
+    }
+
+    let verifyToken = crypto.randomBytes(32).toString("hex") + insertUser.id;
+      
+    await tokenGeneration(insertUser.id, verifyToken);
+
+    const verifyUrl = `${process.env.WEB_URL}/sc/verifyemail?token=${verifyToken}&vr=user`;
+
+    const message=`
+    <h3>Registration of ${insertUser.firstName}</h3>
+    <p>Thank you for registering at ${pharmacy.pharmacy} Pharmacy.</p>
+    <p>Please use the link below to verify your Registration.</p>
+    <p>Your Login Details:</p>
+    <p>Username: ${username}</p>
+    <p>You have been given a random password. Click <a href='${`${process.env.WEB_URL}`}/sc/resetpassword'>here</a> to rest your password.</p>
+    <p>The verification link is valid for only 2 days.</p>
+    <p><a href=${verifyUrl} clicktracking=off>Click here</a> to verify your registration</p><br />
+    <p>If the above link is not working, plase copy and paste the below link in your browser.</p>
+    <p><a href=${verifyUrl} clicktracking=off>${verifyUrl}.</a></p><br />
+
+    <p>Kind Regards</P>
+    `
+    
+    const subject="User Verification"
+    const send_to=insertUser.email
+    const sent_from=process.env.EMAIL_USER
+
+    const sanitizedMessage = await sanitizeMessage(message);
+
+    sendEmail(subject,sanitizedMessage,send_to,sent_from)
+
+    responseData.success=true
+
+    return responseData
+    
+  } catch (error) {
+    console.log(error);
+    responseData.message='Server error has ocurred.'      
+
+    return responseData
+  }
+    
+}
+
+// USER LOGIN
+
+export const loginUser = async (username: any, password: any, req: any) => {
   
   
     try {
-      if (!email || !password) {
+      if (!username || !password) {
         return {
           message: 'Please enter username and password',
           success: false,
         };
       }
   
-      const pharmacy = await Pharmacy.findOne({ email });
+      const user = await User.findOne({ username });
   
-      if (!pharmacy) {
+      if (!user) {
         return {
           message: 'Invalid username or password',
           success: false,
         };
       }
   
-      if (pharmacy.__v === -1) {
+      if (user.__v === -1) {
         return {
           message: 'Invalid username or password',
           success: false,
         };
       }
   
-      const validPassword = await bcrypt.compare(password, pharmacy.password);
+      const validPassword = await bcrypt.compare(password, user.password);
   
       if (validPassword) {
-        if (!pharmacy.verified) {
+        if (!user.verified) {
           return {
             message: 'Email not verified. Please verify your email address',
             success: false,
           };
         }
+
+        let pharmacy= await Pharmacy.findOne({id:user.pharmacy})
   
         if (process.env.NODE_ENV === 'production') {
           // loginDetails(req, pharmacy.id, pharmacy.email, pharmacy.pharmacy);
@@ -306,6 +468,7 @@ export const loginUser = async (email: any, password: any, req: any) => {
         return {
           success: true,
           pharmacy,
+          user,
           access,
         };
       } else {
@@ -323,9 +486,9 @@ export const loginUser = async (email: any, password: any, req: any) => {
     }
 };
 
-// PHARMACY LOGIN 2
+// USER LOGIN 2
 
-export const loginUser2 = async (email: string, password: any) => {
+export const loginUser2 = async (username: string, password: any) => {
   
   let responseData={
     message:'',
@@ -333,27 +496,27 @@ export const loginUser2 = async (email: string, password: any) => {
   }
   
   try {
-    if (!email || !password) {
+    if (!username || !password) {
         responseData.message= 'Please enter username and password'
         return responseData
     }
 
-    const pharmacy = await Pharmacy.findOne({ email });
+    const user = await User.findOne({ username });
 
-    if (!pharmacy) {
+    if (!user) {
         responseData.message= 'Invalid username or password'
         return responseData
     }
 
-    if (pharmacy.__v === -1) {
+    if (user.__v === -1) {
         responseData.message= 'Invalid username or password'
         return responseData
     }
 
-    const validPassword = await bcrypt.compare(password, pharmacy.password);
+    const validPassword = await bcrypt.compare(password, user.password);
 
     if (validPassword) {
-      if (!pharmacy.verified) {
+      if (!user.verified) {
           responseData.message= 'Email not verified. Please verify your email address'
           return responseData
       }
@@ -362,10 +525,10 @@ export const loginUser2 = async (email: string, password: any) => {
       const  loginCode = 'P'+randomNum
       const hashedToken = crypto.createHash("sha256").update(loginCode).digest('hex');
 
-      await Token.deleteMany({ pharmacy: pharmacy.id });
+      await Token.deleteMany({ id: user.id });
 
       await Token.create({
-        pharmacy: pharmacy.id,
+        id: user.id,
         token: hashedToken,
         createdAt: Date.now(),
         expiresAt: Date.now() + 5 * (60 * 1000) // 5 minutes
@@ -373,7 +536,7 @@ export const loginUser2 = async (email: string, password: any) => {
   
       // Email the login code to the user
       const message = `
-        <h2>Hello ${pharmacy.pharmacy}</h2>
+        <h2>Hello ${user.firstName} ${user.lastName}</h2>
         <p>You requested a login code.</p>
         <p>Please use the code below to login.</p>
         <p>The login code is valid for only 5 minutes.</p><br />
@@ -381,7 +544,7 @@ export const loginUser2 = async (email: string, password: any) => {
         <p>Kind Regards</P>
       `;
       const subject = "Login Code";
-      const send_to = email;
+      const send_to = user.email;
       const sent_from = process.env.EMAIL_USER;
 
       const sanitizedMessage = await sanitizeMessage(message);
@@ -401,7 +564,7 @@ export const loginUser2 = async (email: string, password: any) => {
     return responseData
   }
 };
-  
+
   // LOGIN DETAILS - EXTENSION OF loginUser() FUNCTION
   
   // export const loginDetails = async (req: { headers: any; connection: any; }, id: any, email: any, name: any) => {
@@ -490,7 +653,7 @@ export const loginUser2 = async (email: string, password: any) => {
   // };
 
 
-  export const verifyEmail=async(token: null)=>{
+  export const verifyEmail=async(token: null,val:any)=>{
 
     let responseData={
       message:'',
@@ -500,7 +663,6 @@ export const loginUser2 = async (email: string, password: any) => {
     const hashedToken=crypto.createHash("sha256").update(token).digest('hex')
 
     try {
-
         const pharmacyToken=await Token.findOne({
             token:hashedToken,
             expiresAt:{$gt:Date.now()}
@@ -515,8 +677,17 @@ export const loginUser2 = async (email: string, password: any) => {
           responseData.message='Link has already been used.'      
           return responseData
         }
-
-        let pharmacy=await Pharmacy.findOne({id:pharmacyToken.pharmacy})
+        let pharmacy:any
+        if (val==='pharmacy') {
+          pharmacy=await Pharmacy.findOne({id:pharmacyToken.id})
+        }
+        else if(val==='user'){
+          pharmacy=await User.findOne({id:pharmacyToken.id})
+        }
+        else{
+          responseData.message='Invalid link.'      
+          return responseData
+        }
 
         if (pharmacy.verified) {
           responseData.message='You have already verified your email.'      
@@ -527,7 +698,6 @@ export const loginUser2 = async (email: string, password: any) => {
         pharmacyToken.used=true
         await pharmacyToken.save()
         await pharmacy.save()
-
 
         responseData.success=true      
         return responseData
@@ -541,7 +711,7 @@ export const loginUser2 = async (email: string, password: any) => {
 
 // REQUEST PASSWORD CODE
 
-export const forgotPassword = async (body: { email: any; }) => {
+export const forgotPassword = async (body: { username: any; }) => {
 
   let responseData={
     message:'',
@@ -550,16 +720,16 @@ export const forgotPassword = async (body: { email: any; }) => {
 
   try {
 
-    const { email } = body;
-    const pharmacy = await Pharmacy.findOne({ email });
+    const { username } = body;
+    const user = await User.findOne({ username });
 
-    if (!pharmacy) {
+    if (!user) {
       responseData.message='Invalid Username.'      
       return responseData
     }
 
     // Delete existing token for the user from DB if it exists
-    await Token.deleteMany({ pharmacy: pharmacy.id });
+    await Token.deleteMany({ id: user.id });
 
     // Generate a random token and hash it before saving to DB
     const resetToken = crypto.randomBytes(8).toString("hex").toUpperCase();
@@ -568,7 +738,7 @@ export const forgotPassword = async (body: { email: any; }) => {
     // console.log(resetToken);
     // Save the new token to DB
     await Token.create({
-      pharmacy: pharmacy.id,
+      id: user.id,
       token: hashedToken,
       createdAt: Date.now(),
       expiresAt: Date.now() + 5 * (60 * 1000) // 5 minutes
@@ -576,7 +746,7 @@ export const forgotPassword = async (body: { email: any; }) => {
 
     // Email the reset token to the user
     const message = `
-      <h2>Hello ${pharmacy.pharmacy}</h2>
+      <h2>Hello ${user.firstName}</h2>
       <p>You requested a password reset.</p>
       <p>Please use the code below to reset your password.</p>
       <p>The reset code is valid for only 5 minutes.</p><br />
@@ -584,7 +754,7 @@ export const forgotPassword = async (body: { email: any; }) => {
       <p>Kind Regards</P>
     `;
     const subject = "Password Reset Request";
-    const send_to = pharmacy.email;
+    const send_to = user.email;
     const sent_from = process.env.EMAIL_USER;
 
     try {
@@ -611,7 +781,7 @@ export const forgotPassword = async (body: { email: any; }) => {
 
 // CHECK PASSWORD CODE
 
-export const checkResetPasswordCode = async (body: { code: string; email: any; }) => {
+export const checkResetPasswordCode = async (body: { code: string; username:any}) => {
   let responseData={
     message:'',
     success:false
@@ -623,10 +793,10 @@ export const checkResetPasswordCode = async (body: { code: string; email: any; }
     let hashedToken = crypto.createHash("sha256").update(myCode).digest("hex");
     hashedToken = crypto.createHash("sha256").update(hashedToken).digest("hex");
 
-    const pharmacy = await Pharmacy.findOne({ email:body.email });
+    const user = await User.findOne({ username:body.username });
 
     const pharmacyToken = await Token.findOne({
-      pharmacy: pharmacy.id,
+      id: user.id,
       token: hashedToken,
       expiresAt: { $gt: Date.now() }
     });
@@ -647,7 +817,7 @@ export const checkResetPasswordCode = async (body: { code: string; email: any; }
 
 // RESET PASSWORD
 
-export const resetPassword = async (body: { password: any; email: any; }) => {
+export const resetPassword = async (body: { password: any; username: any; }) => {
 
   let responseData={
     message:'',
@@ -656,29 +826,29 @@ export const resetPassword = async (body: { password: any; email: any; }) => {
 
   try {
 
-    const { password, email } = body;
+    const { password, username } = body;
 
-    // Find user by memberNumber
-    const pharmacy = await Pharmacy.findOne({ email }).select("-password");
+    // Find user by username
+    const user = await User.findOne({ username }).select("-password");
 
-    if (!pharmacy) {
-      responseData.message='Pharmacy not found, please sign up.'      
+    if (!user) {
+      responseData.message='User not found, please sign up.'      
       return responseData
     }
     
     // Update user password
-    pharmacy.password = password;
-    await pharmacy.save();
+    user.password = password;
+    await user.save();
 
     const message = `
-      <h2>Hello ${pharmacy.pharmacy}</h2>
+      <h2>Hello ${user.firstName}</h2>
       <p>You have reset your password successfully.</p>
       <p>If you did not change your password, contact us on the email below.</p>
       <p><a href=${process.env.EMAIL_USER} alt='_blank' clicktracking=off>${process.env.EMAIL_USER}.</a></p><br />
       <p>Kind Regards</p>
     `;
     const subject = "Password Reset Update";
-    const send_to = pharmacy.email;
+    const send_to = user.email;
     const sent_from = process.env.EMAIL_USER;
 
     try {
@@ -701,3 +871,92 @@ export const resetPassword = async (body: { password: any; email: any; }) => {
     return responseData
   }
 };
+
+export const getUserData=async(pharmacy:any)=>{
+
+  let responseData={
+    message:'',
+    success:false,
+    users: []
+  }
+
+  try {
+
+    let users=await User.find({pharmacy,__v:0}).select('-password -_id')
+
+    responseData.success=true
+    responseData.users=users
+
+    console.log(users);
+    
+
+    return responseData
+    
+  } catch (error) {
+    console.log(error);
+    responseData.message='Server error occurred.'      
+    return responseData
+  }
+
+}
+
+export const editUserData=async(body:any)=>{
+
+  let responseData={
+      message:'',
+      success:false,
+  }
+
+  try {
+      let editUser=await User.findOneAndUpdate(
+          {pharmacy:body.pharmacy, id:body.id},{$set:{...body}},{new:true}
+      )
+
+      if (editUser) {
+          
+          responseData.success=true
+      }
+      else{
+          responseData.message='Invalid user data'
+      }
+
+      return responseData
+      
+  } catch (error) {
+      console.log(error);
+      responseData.message='Server error has ocurred.'      
+  
+      return responseData
+  }
+
+}
+
+export const deleteUserData=async(pharmacy:any,username:any)=>{
+
+  let responseData={
+      message:'',
+      success:false,
+  }
+
+  try {
+      let deleteUser=await User.findOneAndUpdate(
+          {pharmacy, username},{$set:{__v:1}},{new:true}
+      )
+
+      if (deleteUser) {
+          responseData.success=true
+      }
+      else{
+          responseData.message='Invalid user data'
+      }
+
+      return responseData
+      
+  } catch (error) {
+      console.log(error);
+      responseData.message='Server error has ocurred.'      
+  
+      return responseData
+  }
+
+}

@@ -3,7 +3,7 @@ import mongoose, { Schema, model, models } from 'mongoose'
 
 const tokenSchema=new Schema({
 
-    pharmacy:{
+    id:{
         type:mongoose.Schema.Types.ObjectId,
         required:true,
     },

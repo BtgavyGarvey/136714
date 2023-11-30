@@ -22,6 +22,8 @@ export default function NewMedicinePage({pharm}:any) {
 
     initialState.pharmacy=pharm.id
 
+    const dateInput=React.useRef()
+
     let toastId:any
 
     const router=useRouter()
@@ -86,6 +88,11 @@ export default function NewMedicinePage({pharm}:any) {
       
   };
 
+  React.useEffect(()=>{
+    var today = new Date().toISOString().split('T')[0];
+    dateInput.current.setAttribute('min', today);
+  },[])
+
     return(
       <>
       <Toaster 
@@ -110,16 +117,19 @@ export default function NewMedicinePage({pharm}:any) {
       </Toaster>
       <div className= 'container'> 
           <section id= 'second' className="nav_section">
-          <div className="main-dashboard justify-content-center ">
-              <h3 className="text-success fw-bold m-3 ">New Medicine</h3>
+            
+          <div className="main-dashboard ">
+            <div className="col col-md-12 d-flex justify-content-center ">
+            <h3 className="text-success fw-bold m-3 ">New Medicine</h3>
+            </div>
           </div>
           <div className="main-dashboard justify-content-center ">
           <div className="d-block">
 
           <div className="row col col-md-12 form-outline form-white mb-4">
             <div className="col col-md-6 form-group">
-              <label className="fw-bold" >Batch Number :</label>
-              <input onChange={handleInputChange} type="text" className="form-control form-control-lg"  placeholder="Batch Number" name="batchNumber"/>
+              <label className="fw-bold" >Medicine ID :</label>
+              <input onChange={handleInputChange} type="text" className="form-control form-control-lg"  placeholder="Medicine ID" name="batchNumber"/>
             </div>
 
             <div className="col col-md-6 form-group">
@@ -160,7 +170,7 @@ export default function NewMedicinePage({pharm}:any) {
 
             <div className="col col-md-6 form-group">
               <label className="fw-bold">Expiry Date:</label>
-              <input onChange={handleInputChange} type="date" className="form-control form-control-lg" name="expiresAt"/>
+              <input ref={dateInput} onChange={handleInputChange} type="date" className="form-control form-control-lg" name="expiresAt"/>
             </div>
 
             <div className="col col-md-6 form-group ">

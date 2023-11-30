@@ -12,7 +12,7 @@ const authOptions:AuthOptions={
     providers:[
         CredentialsProvider({
             type:'credentials',
-            credentials:{email:{},password:{}},
+            credentials:{username:{},password:{}},
             async authorize(credentials,request){
 
                 let pharmacyData:any
@@ -21,7 +21,7 @@ const authOptions:AuthOptions={
 
                     await DbConnect();
 
-                    pharmacyData=await loginUser(credentials.email,credentials.password,request)
+                    pharmacyData=await loginUser(credentials.username,credentials.password,request)
                 }
                 else{
                     throw new Error('Invalid credentials')
@@ -34,6 +34,8 @@ const authOptions:AuthOptions={
                 return {
                     id:pharmacyData.pharmacy.id,
                     access:pharmacyData.access,
+                    role:pharmacyData.user.role,
+                    user:pharmacyData.user.id,
                     name:pharmacyData.pharmacy.pharmacy
                 }
 
@@ -51,16 +53,20 @@ const authOptions:AuthOptions={
 
             if(user){
                 token.id=user.id
+                token.user=user.user
                 token.access=user.access
                 token.name=user.name
+                token.role=user.role
             }
             return token
         },
         async session({session,token}:any){
             if(token){
                 session.user.id=token.id
+                session.user.user=token.user
                 session.user.access=token.access
                 session.user.name=token.name
+                session.user.role=token.role
             } 
             return session
         }

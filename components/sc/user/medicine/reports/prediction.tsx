@@ -16,8 +16,9 @@ import { ReportData } from "../../../../../src/app/sc/user/medicine/reports/data
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowAltCircleRight } from "@fortawesome/free-solid-svg-icons";
+import toast, { Toaster } from "react-hot-toast";
 
-export default function ViewMedicinePage({pharm, data=[]}:any) {
+export default function ViewPredictionPage({pharm, data=[]}:any) {
 
   let [Data, setData]=React.useState(null)
   // const [chartData, setChartData] = React.useState([])
@@ -130,9 +131,14 @@ export default function ViewMedicinePage({pharm, data=[]}:any) {
 
   ReportData()
 
+  let dateInput1=React.useRef()
+  let dateInput2=React.useRef()
+
 
   React.useEffect(()=>{
-    // getReportData()
+    var today = new Date().toISOString().split('T')[0];
+    dateInput1.current.setAttribute('min', today);
+    dateInput2.current.setAttribute('min', today);
   },[])
   
   // console.log(data);
@@ -182,6 +188,11 @@ export default function ViewMedicinePage({pharm, data=[]}:any) {
 
   const [chartDataHour, setChartDataHour] = React.useState();
   const [chartDataDate, setChartDataDate] = React.useState();
+  const [formData, setFormData] = React.useState({
+    firstDate:'',
+    lastDate:'',
+    medicineCategory:''
+  });
 
   React.useEffect(()=>{
     refMedName.current=''
@@ -378,19 +389,130 @@ export default function ViewMedicinePage({pharm, data=[]}:any) {
     },
   };
 
+    const handleInputChange = (e: { target: { name: any; value: any; }; }) => {
+      
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+
+        if ((name==='lastDate' && formData.firstDate)) {
+
+            if (formData.firstDate > value) {
+                toast.error('Invalid prediction date range')
+                
+            }
+
+        }
+
+        if ((name==='firstDate' && formData.lastDate)) {
+
+            if (formData.lastDate < value) {
+                toast.error('Invalid prediction date range')
+                
+            }
+
+        }
+    };
+
+  const predict=async(e:any)=>{
+
+    e.preventDefault()
+
+    if (formData.lastDate < formData.firstDate) {
+        toast.error('Invalid prediction date range')
+        return
+        
+    }
+
+    console.log(formData);
+    
+    
+  }
+
   return(
       <>
+      <Toaster 
+
+    toastOptions={{
+        success:{
+            style:{
+                background:'green',
+                color:'white',
+            }
+        },
+        error:{
+            style:{
+                background:'red',
+                color:'white'
+            }
+        },
+        
+    }}
+
+    >
+    </Toaster>
       <div className= 'container'> 
       
-          <section id= 'fifth' className="nav_section">
+          <section id= 'eighth' className="nav_section">
+
           <div className="main-dashboard justify-content-center bg-danger">
-              <h3 className="text-light fw-bold m-3 ">Medicine Report Dashboard</h3>
+              <h3 className="text-light fw-bold m-3 ">Sales Prediction Dashboard</h3>
           </div>
-          <div className="col col-md-12 d-flex justify-content-end">
-            <a href="/sc/user/medicine/reports/prediction#eighth" className="fw-bold">Predict Sales <FontAwesomeIcon icon={faArrowAltCircleRight} className="text-success"/></a>
+        
+        <form onSubmit={predict} style={{background: 'beige'}}>
+        <div className="main-dashboard justify-content-center ">
+              <h3 className="text-success fw-bold m-3 ">Prediction Form</h3>
+          </div>
+          <div className="main-dashboard justify-content-center ">
+          <div className="d-block">
+
+          <div className="row col col-md-12 form-outline form-white mb-4">
+            <div className="col col-md-6 form-group">
+              <label className="fw-bold" >Predict From :</label>
+              <input ref={dateInput1} onChange={handleInputChange} type="date" className="form-control form-control-lg"  name="firstDate" required/>
+            </div>
+
+            <div className="col col-md-6 form-group">
+              <label className="fw-bold" >Predict To :</label>
+              <input ref={dateInput2} onChange={handleInputChange} type="date" className="form-control form-control-lg"  name="lastDate" required/>
+            </div>
+            
           </div>
 
-          <hr  />
+          <div className="row col col-md-12 form-outline form-white mb-4">
+          <div className="col col-md-12 form-group">
+              <label className="fw-bold" >Medicine Category :</label>
+              <select onChange={handleInputChange} className="form-control form-control-lg" name='medicineCategory' required>
+                <option></option>
+                <option value={'1'}>M01AB</option>
+                <option value={'2'}>M01AE</option>
+                <option value={'3'}>N02BE/B</option>
+                <option value={'4'}>N05B</option>
+                <option value={'5'}>N05C</option>
+                <option value={'6'}>R03</option>
+                <option value={'7'}>R06</option>
+              </select>
+              
+            </div>
+
+          </div>
+
+          <hr />
+
+          <div className="row col col-md-12 form-outline form-white mb-4">
+            &emsp;
+            <div className="form-group m-auto">
+              <button type="submit" className="btn btn-primary form-control fw-bold" >MAKE PREDICTION</button>
+            </div>
+
+          </div>
+
+          </div>
+          </div>
+        </form>
+          
+
+          {/* <hr />
+
           <div className="d-flex justify-content-between col-md-8 p-1 m-3">
             <div className="col-md-4 p-1">
               <label className="fw-bold">Select Drug Name</label>
@@ -473,7 +595,7 @@ export default function ViewMedicinePage({pharm, data=[]}:any) {
 
               </>
               )
-          }
+          } */}
 
           
 
