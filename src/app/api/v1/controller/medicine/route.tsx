@@ -167,7 +167,7 @@ export const newMedicine=async(value:any)=>{
         const batchNumberExist=data[0].value
     
         if (batchNumberExist) {
-            responseData.message='Batch Number has already been registered'
+            responseData.message='ID has already been registered'
             return responseData
         }
 

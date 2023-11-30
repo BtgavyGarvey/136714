@@ -8,37 +8,39 @@ import { faTrashAlt } from "@fortawesome/free-solid-svg-icons/faTrashAlt"
 import React from "react"
 import toast, { Toaster } from "react-hot-toast"
 import axios from "axios"
-import { DayTime } from "../../../layout/topNav"
+import { DayTime } from "../../layout/topNav"
+import { signOut } from "next-auth/react"
 
 let tempQuantity: Number | null=null
-
-export default function ViewMedicinePage({pharm}:any) {
+let myId:any
+export default function ViewUserPage({pharm}:any) {
 
     const pharmacyName=pharm.name
 
     let toastId:any
 
+
     const router=useRouter()
     const dialogBox=React.useRef()
 
-    const [medicineData, setMedicineData]=React.useState([])
-    const [oneMedicineData, setOneMedicineData]=React.useState()
+    const [userData, setUserData]=React.useState([])
+    const [oneUserData, setOneUserData]=React.useState()
 
     React.useEffect(()=>{
         dialogBox.current.close()
-        getMedicineData()
+        getUserData()
     },[])
 
-    const getMedicineData=async()=>{
+    const getUserData=async()=>{
         toastId=toast.loading('Loading, please wait...',{
             id:toastId
         })
 
-        let response=await axios.get(`/api/v1/controller/medicine?action=getMedicineData&pharmacy=${pharm.id}`)            
+        let response=await axios.get(`/api/v1/controller/user?action=getUserData&pharmacy=${pharm.id}`)            
         toast.dismiss(toastId)
         if (response.data.success===true) {
           toast.success(`Successful!`,{id:toastId})
-          setMedicineData(response.data.drugs)
+          setUserData(response.data.users)
         }
         else{
             
@@ -46,30 +48,35 @@ export default function ViewMedicinePage({pharm}:any) {
         }
     }
 
-    const oneMedicine=(data:any)=>{
+    const oneUser=(data:any)=>{
         tempQuantity=data.availableQuantity
-        setOneMedicineData(data)
+        setOneUserData(data)
         dialogBox.current.showModal()
 
     }
 
-    const deleteMed=async(pharmacy:any, batchNumber:any)=>{
+    const deleteUser=async(pharmacy:any, username:any)=>{
 
-        let answer=confirm(`Are you sure you want to delete medicine with ID: ${batchNumber}`)
-
-        if (answer) {
-            toastId=toast.loading('Loading, please wait...',{
-                id:toastId
-            })
-    
-            let response=await axios.delete(`/api/v1/controller/medicine?action=deleteMedicineData&pharmacy=${pharmacy}&medID=${batchNumber}`)            
-            toast.dismiss(toastId)
-            if (response.data.success===true) {
-                toast.success(`Successful!`,{id:toastId})
-                getMedicineData()
-            }
-            else{
-                toast.error(`Failed! ${response.data.message}`,{id:toastId})
+        let answer=confirm(`Are you sure you want to delete user with username: ${username}`)
+        if (myId === pharm.user) {
+            toast.error('Failed!!! Access Denied')
+            return
+        }
+        else{
+            if (answer) {
+                toastId=toast.loading('Loading, please wait...',{
+                    id:toastId
+                })
+        
+                let response=await axios.delete(`/api/v1/controller/user?action=deleteUserData&pharmacy=${pharmacy}&username=${username}`)            
+                toast.dismiss(toastId)
+                if (response.data.success===true) {
+                    toast.success(`Successful!`,{id:toastId})
+                    getUserData()
+                }
+                else{
+                    toast.error(`Failed! ${response.data.message}`,{id:toastId})
+                }
             }
         }
         
@@ -79,32 +86,35 @@ export default function ViewMedicinePage({pharm}:any) {
 
         const result=[]
 
-
-        for (let i = 0; i < medicineData.length; i++) {
-            result.push(
-                <>
-                <tr>
-                <td>{medicineData[i].batchNumber}</td>
-                <td>{medicineData[i].medicineName}</td>
-                <td>{medicineData[i].dosageForm}</td>
-                <td>{medicineData[i].medicineCategory}</td>
-                <td>{medicineData[i].availableQuantity}</td>
-                <td>{medicineData[i].costPerUnit}</td>
-                <td>{(DayTime(medicineData[i].expiresAt))}</td>
-                {
-                    pharm.role==='Administrator' && (
+        if (userData.length>0) {
+            for (let i = 0; i < userData.length; i++) {
+                result.push(
                     <>
-                    <td><a title='Edit' onClick={(e)=>{oneMedicine(medicineData[i])}}><FontAwesomeIcon icon={faEdit} className="editA text-warning"/></a></td>
-                    <td><a title="Delete" onClick={(e)=>{deleteMed(medicineData[i].pharmacy, medicineData[i].batchNumber)}}><FontAwesomeIcon icon={faTrashAlt} className="editA text-danger"/></a></td>
+                    <tr>
+                    <td>{userData[i].username}</td>
+                    <td>{userData[i].firstName}</td>
+                    <td>{userData[i].lastName}</td>
+                    <td>{userData[i].email}</td>
+                    <td>{userData[i].role}</td>
+                    {
+                        pharm.role==='Administrator' &&(
+                            <>
+                    <td><a title='Edit' onClick={(e)=>{oneUser(userData[i])}}><FontAwesomeIcon icon={faEdit} className="editA text-warning"/></a></td>
+                    <td><a title="Delete" onClick={(e)=>{
+                        myId=userData[i].id
+                        deleteUser(userData[i].pharmacy, userData[i].username)
+                        }}><FontAwesomeIcon icon={faTrashAlt} className="editA text-danger"/></a>
+                    </td>
+                            </>
+                        )
+                    }
+                    
+                    </tr>
+        
                     </>
-                    )
-                }
-                
-                </tr>
-    
-                </>
-            )
-    
+                )
+        
+            }
         }
 
         return result
@@ -115,17 +125,14 @@ export default function ViewMedicinePage({pharm}:any) {
 
         result.push(
             <>
-            {/* <div className="main-dashboard justify-content-between ">
-                <h3 className="text-success fw-bold m-3 "></h3>
-            </div> */}
             <div className="main-dashboard ">
             <div className="col col-md-10 d-flex justify-content-center ">
-            <h3 className="text-success fw-bold m-3 ">Medicine Report Dashboard</h3>
+            <h3 className="text-success fw-bold m-3 ">Users Report Dashboard</h3>
             </div>
             <div className="col col-md-2 m-3 d-flex justify-content-start">
                 {
                     pharm.role==='Administrator' && (
-                        <a href="/sc/user/medicine/new#second" className="fw-bold text-dark">New Medicine</a>
+                        <a href="/sc/user/new#seventh" className="fw-bold text-dark">New User</a>
                     )
                 }
             </div>
@@ -139,26 +146,24 @@ export default function ViewMedicinePage({pharm}:any) {
             	<table className="table table-bordered table-striped table-hover ">
                     <thead >
                         <tr className="bg-secondary">
-                        <th>Medicine ID</th>
-                        <th>Medicine Name</th>
-                        <th>Dosage Form</th>
-                        <th>Category</th>
-                        <th>Ava. Quantity</th>
-                        <th>Cost Per Unit</th>
-                        <th>Expiry Date</th>
+                        <th>Username</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Email Address</th>
+                        <th>Role</th>
                         {
-                            pharm.role==='Administrator' && (
+                            pharm.role ==='Administrator' && (
                         <th colSpan={'2'}>Actions</th>
 
-                            )
+                        )
                         }
-
                         </tr>
                         
                     </thead>
                     <tbody>
                         {
                             getTableData()
+
                         }
                     </tbody>
                 </table>
@@ -179,19 +184,8 @@ export default function ViewMedicinePage({pharm}:any) {
     const handleInputChange = (e: { target: { name: any; value: any; }; }) => {
       
         const { name, value } = e.target;
-        setOneMedicineData({ ...oneMedicineData, [name]: value });
+        setOneUserData({ ...oneUserData, [name]: value });
 
-        if (name==='newQuantity') {
-
-            if (value > 0) {
-                let a=parseFloat(tempQuantity)+parseFloat(value)
-                setOneMedicineData({ ...oneMedicineData, ['availableQuantity']: a });
-            }
-            else{
-                setOneMedicineData({ ...oneMedicineData, ['availableQuantity']: tempQuantity });
-            }
-
-        }
     }
 
     const saveEdit=async(val:any)=>{
@@ -203,13 +197,23 @@ export default function ViewMedicinePage({pharm}:any) {
             toastId=toast.loading('Loading, please wait...',{
                 id:toastId
             })
+            console.log(oneUserData);
     
-            let response=await axios.patch(`/api/v1/controller/medicine?action=editMedicineData`,oneMedicineData)            
+            let response=await axios.patch(`/api/v1/controller/user?action=editUserData`,oneUserData)            
             toast.dismiss(toastId)
             if (response.data.success===true) {
               toast.success(`Successful!`,{id:toastId})
-              getMedicineData()
+              getUserData()
                 dialogBox.current.close()
+
+                if (pharm.user === oneUserData.id) {
+
+                    if (pharm.role !== oneUserData.role) {
+                        await signOut()
+                        router.push('/')
+                    }
+                    
+                }
 
             }
             else{
@@ -217,6 +221,8 @@ export default function ViewMedicinePage({pharm}:any) {
             }
         }
     }
+
+    
 
     return(
         <>
@@ -241,42 +247,47 @@ export default function ViewMedicinePage({pharm}:any) {
         >
         </Toaster>
         <div className= 'container'> 
-            <section id= 'third' className="nav_section">
+            <section id= 'sixth' className="nav_section">
             <div>
                 {
                     renderReportDashboard()
                 }
                 <dialog className="dialog1"  ref={dialogBox}>
                     {
-                        oneMedicineData && (
+                        oneUserData && (
                             <>
                             <div className="d-flex justify-content-end">
-                                <span><span className='fw-bold'>Medicine ID: </span> {oneMedicineData.batchNumber}</span>
+                                <span><span className='fw-bold'>Username: </span> {oneUserData.username}</span>
                             </div>
                             <div className="main-dashboard justify-content-center">
-                            <h3 className="text-danger fw-bold">{oneMedicineData.medicineName}</h3>
+                            <h3 className="text-danger fw-bold">{oneUserData.firstName} {oneUserData.lastName}</h3>
                             </div>
                             <div className="row col col-md-12 form-outline form-white mb-4">
                                 <div className="col col-md-6 form-group">
-                                <label className="fw-bold" >Medicine Name :</label>
-                                <input onChange={handleInputChange} type="text" className="form-control form-control-lg"  value={oneMedicineData.medicineName} name="medicineName"/>
+                                <label className="fw-bold" >First Name :</label>
+                                <input onChange={handleInputChange} type="text" className="form-control form-control-lg"  value={oneUserData.firstName} name="firstName"/>
                                 </div>
 
                                 <div className="col col-md-6 form-group">
-                                <label className="fw-bold" >Cost Per Unit :</label>
-                                <input onChange={handleInputChange} type="number" className="form-control form-control-lg"  value={oneMedicineData.costPerUnit} name="costPerUnit"/>
+                                <label className="fw-bold" >Last Name :</label>
+                                <input onChange={handleInputChange} type="text" className="form-control form-control-lg"  value={oneUserData.lastName} name="lastName"/>
                                 </div>
                                 
                             </div>
                             <div className="row col col-md-12 form-outline form-white mb-4">
                                 <div style={{pointerEvents:'none'}} className="col col-md-6 form-group">
-                                <label className="fw-bold" >Available Quantity :</label>
-                                <input  onChange={handleInputChange} type="text" className="form-control form-control-lg"  value={oneMedicineData.availableQuantity} name="availableQuantity"/>
+                                <label className="fw-bold" >Email Address :</label>
+                                <input  onChange={handleInputChange} type="email" className="form-control form-control-lg"  value={oneUserData.email} name="email" disabled/>
                                 </div>
 
                                 <div className="col col-md-6 form-group">
-                                <label className="fw-bold" >New Quantity :</label>
-                                <input onChange={handleInputChange} type="text" className="form-control form-control-lg" name="newQuantity"/>
+                                <label className="fw-bold" >Role :</label>
+                                <select onChange={handleInputChange} className="form-control form-control-lg" name='role'>
+                                    <option>{oneUserData.role}</option>
+                                    <option value={'Pharmacist'}>Pharmacist</option>
+                                    <option value={'Administrator'}>Administrator</option>
+                                </select>
+                                
                                 </div>
                                 
                             </div>

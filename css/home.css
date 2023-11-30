@@ -92,6 +92,18 @@
   background: var(--primary-color);
 }
 
+#eighth {
+  background: var(--primary-color);
+}
+
+#sixth {
+  background: var(--complimentary-color);
+}
+
+#seventh {
+  background: var(--contrast-color);
+}
+
 .main-dashboard{
   display: flex;
   width: 100%;

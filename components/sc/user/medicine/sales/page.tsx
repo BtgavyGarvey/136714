@@ -218,6 +218,7 @@ export default function ViewMedicinePage({pharm, drugs}:any) {
         toastId=toast.loading('Loading, please wait...',{
             id:toastId
         })
+// console.log(sellData);
 
         let response=await axios.post('/api/v1/controller/medicine?action=newSale',sellData)            
         toast.dismiss(toastId)
@@ -353,6 +354,7 @@ export default function ViewMedicinePage({pharm, drugs}:any) {
         totalChange(currentPrice)
        
     }
+    console.log(sellData);
 
     return(
         <>

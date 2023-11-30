@@ -95,8 +95,18 @@ export async function newPharmacyValidation (data: any){
         pharmacy: Joi.string().trim().required(),
         mobile: Joi.number().required(),
         email: Joi.string().trim().required(),
-        password: Joi.string().trim().required(),
-        confirmPassword: Joi.string().trim()
+    });
+
+    return schema.validate(data);
+};
+
+export async function newUserValidation (data: any){
+    const schema = Joi.object({
+        pharmacy: Joi.string().trim().required() || Joi.object().required(),
+        firstName: Joi.string().trim().required(),
+        email: Joi.string().trim().required(),
+        lastName: Joi.string().trim().required(),
+        role: Joi.string().trim().required()
     });
 
     return schema.validate(data);
@@ -105,7 +115,7 @@ export async function newPharmacyValidation (data: any){
 export async function newMedicineValidation (data: any){
     
     const schema = Joi.object({
-        pharmacy: Joi.string().trim().required(),
+        pharmacy: Joi.string().trim().required() || Joi.object().required(),
         medicineName: Joi.string().trim().required(),
         costPerUnit: Joi.number().required(),
         dosageForm: Joi.string().trim().required(),

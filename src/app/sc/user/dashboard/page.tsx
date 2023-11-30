@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { getServerSession } from 'next-auth/next'
-import Dashboard from "../../../../../components/sc/user/dashboard"
+import Dashboard from "../../../../../components/sc/user/dashboard/index"
 import { useSession } from "next-auth/react"
 import Loader from "../../../../../components/sc/loader/Loader"
 import { NextRequest } from "next/server"

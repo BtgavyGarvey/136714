@@ -8,7 +8,7 @@ import axios from "axios";
 
 let initialState = {
     password: "",
-    email:"",
+    username:"",
 };
 
 export default function Login(){
@@ -20,8 +20,8 @@ export default function Login(){
 
     const validate=async()=>{
 
-        if(!formData.email){
-            toast.error("Email is required",{
+        if(!formData.username){
+            toast.error("Username is required",{
                 id:toastId
             })
             return false
@@ -58,11 +58,11 @@ export default function Login(){
                 id:toastId
             })
 
-            let response=await axios.get(`/api/v1/controller/user?action=login&email=${formData.email}&password=${formData.password}`)
+            let response=await axios.get(`/api/v1/controller/user?action=login&username=${formData.username}&password=${formData.password}`)
 
             if (response.data.success===true) {
                     
-                toast.success(`Successful! Login code has been sent to your email`,{id:toastId})
+                toast.success(`Login code has been sent to your email`,{id:toastId})
 
                 let code:any
 
@@ -77,7 +77,7 @@ export default function Login(){
                 if (code !==null || code !=='') {
 
                     let codeData = {
-                        email:formData.email,
+                        username:formData.username,
                         code:code
                     };
 
@@ -86,7 +86,7 @@ export default function Login(){
                     if (confirmCode.data.success===true) {
 
                         let info=await signIn('credentials',{
-                            email:formData.email,
+                            username:formData.username,
                             password:formData.password,
                             redirect:false
                         })
@@ -156,16 +156,16 @@ export default function Login(){
                         </div>
 
                         <h2 className="fw-bold mb-3 text-uppercase text-warning">Login</h2>
-                        <p className="text-white-50 mb-5">Please enter your email and password!</p>
+                        <p className="text-white-50 mb-5">Please enter your username and password!</p>
 
                         <div className="form-outline form-white mb-4">
-                            <input type="email" name="email" className="form-control form-control-lg" 
+                            <input type="text" name="username" className="form-control form-control-lg" 
                             onChange={handleInputChange}
                             autoFocus
                             autoComplete='false' 
 
                             />
-                            <label className="form-label" >Email Address</label>
+                            <label className="form-label" >Username</label>
                         </div>
 
                         <div className="form-outline form-white mb-4">
