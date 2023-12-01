@@ -275,18 +275,3 @@ export const ReportData=async()=>{
     }
   
 }
-
-export const predict=async()=>{
-  const url = 'http://127.0.0.1:5000/api/v1/predict'
-  const data = {start_date: '2023-2-1', end_date: '2023-3-31', drug:3}  
-
-  try {
-    let response =await axios.post(url, data)
-    console.log(response.data)
-  } catch (error) {
-    console.log(error);
-    
-  }
-
-  
-}

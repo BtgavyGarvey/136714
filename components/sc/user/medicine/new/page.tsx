@@ -157,11 +157,13 @@ export default function NewMedicinePage({pharm}:any) {
                 <option></option>
                 <option>M01AB</option>
                 <option>M01AE</option>
-                <option>N02BE/B</option>
+                <option>N02BE</option>
                 <option>N05B</option>
                 <option>N05C</option>
                 <option>R03</option>
                 <option>R06</option>
+                <option>N02BA</option>
+
               </select>
             </div>
           </div>

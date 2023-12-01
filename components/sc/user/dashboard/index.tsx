@@ -108,7 +108,8 @@ export default function Dashboard({pharm}:any) {
                     {createSection1('N05B Drugs',mydashboardData ? mydashboardData.N05B.toLocaleString() : 0,9)}
                     {createSection1('R03 Drugs',mydashboardData ? mydashboardData.R03.toLocaleString() : 0,10)}
                     {createSection1('R06 Drugs',mydashboardData ? mydashboardData.R06.toLocaleString() : 0,11)}
-                    {createSection1('N02BE/B Drugs',mydashboardData ? mydashboardData.N02BEB.toLocaleString() : 0,12)}
+                    {createSection1('N02BE Drugs',mydashboardData ? mydashboardData.N02BE.toLocaleString() : 0,12)}
+                    {createSection1('N02BA Drugs',mydashboardData ? mydashboardData.N02BA.toLocaleString() : 0,12)}
                     {createSection1('Expired Drugs',mydashboardData ? mydashboardData.expiredDrugs.toLocaleString() : 0,13)}
 
                 </>

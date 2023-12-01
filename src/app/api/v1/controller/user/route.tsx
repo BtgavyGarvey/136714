@@ -335,13 +335,15 @@ export const newUser=async(value: undefined)=>{
 
     const body=validate.value
 
+
+    let pharmacyObject=JSON.parse(JSON.stringify(body.pharmacy))
+
     const promises=[
       User.findOne({email:body.email,__v:0}).select('-password -_id'),
-      Pharmacy.findOne({id:JSON.parse(body.pharmacy)}),
+      Pharmacy.findOne({id:pharmacyObject}),
       generateUniqueUsername(),
       generateUniqueUserId(2),
     ]
-
     const promise=await Promise.allSettled(promises)
 
     const data=promise.filter((res)=> res.status==='fulfilled') as PromiseFulfilledResult<any>[]

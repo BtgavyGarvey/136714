@@ -4,7 +4,7 @@ import { NextRequest } from "next/server"
 import authOptions from "@/app/api/auth/[...nextauth]/options"
 import SideNav from "../../../../../../components/sc/layout/sideNav"
 import ReportsPage from "../../../../../../components/sc/user/medicine/reports/index"
-import { ReportData, predict } from "./data"
+import { ReportData } from "./data"
 
 
 export default async function ReportPage(req:NextRequest): Promise<any>{
@@ -14,7 +14,7 @@ export default async function ReportPage(req:NextRequest): Promise<any>{
   const toLoginPage=()=>{
     redirect('/')
   }
-  predict()
+  // predict()
 
   let chartDataHour=await ReportData()
   // console.log(chartDataHour);
