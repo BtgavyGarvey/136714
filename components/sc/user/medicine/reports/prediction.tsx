@@ -142,6 +142,7 @@ export default function ViewPredictionPage({pharm, data=[]}:any) {
   },[])
   
   // console.log(data);
+  let toastId:any
 
   const pharmacyName=pharm.name
 
@@ -188,10 +189,11 @@ export default function ViewPredictionPage({pharm, data=[]}:any) {
 
   const [chartDataHour, setChartDataHour] = React.useState();
   const [chartDataDate, setChartDataDate] = React.useState();
+  const [PredictionData, setPredictionData] = React.useState();
   const [formData, setFormData] = React.useState({
-    firstDate:'',
-    lastDate:'',
-    medicineCategory:''
+    startDate:'',
+    endDate:'',
+    drug:''
   });
 
   React.useEffect(()=>{
@@ -394,18 +396,18 @@ export default function ViewPredictionPage({pharm, data=[]}:any) {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
 
-        if ((name==='lastDate' && formData.firstDate)) {
+        if ((name==='lastDate' && formData.startDate)) {
 
-            if (formData.firstDate > value) {
+            if (formData.startDate > value) {
                 toast.error('Invalid prediction date range')
                 
             }
 
         }
 
-        if ((name==='firstDate' && formData.lastDate)) {
+        if ((name==='firstDate' && formData.endDate)) {
 
-            if (formData.lastDate < value) {
+            if (formData.endDate < value) {
                 toast.error('Invalid prediction date range')
                 
             }
@@ -417,16 +419,99 @@ export default function ViewPredictionPage({pharm, data=[]}:any) {
 
     e.preventDefault()
 
-    if (formData.lastDate < formData.firstDate) {
+    if (formData.endDate < formData.startDate) {
         toast.error('Invalid prediction date range')
         return
         
     }
 
-    console.log(formData);
-    
-    
+    toastId=toast.loading('Loading, please wait...',{
+      id:toastId
+    })
+
+    let response=await axios.post(`/api/v1/controller/medicine?action=predict`,formData)            
+    toast.dismiss(toastId)
+    if (response.data.success===true) {
+      toast.success(`Successful!`,{id:toastId})
+      setPredictionData(response.data.prediction)
+      // console.log(response.data.prediction);
+
+    }
+    else{
+        toast.error(`Failed! ${response.data.message}`,{id:toastId})
+    }
+
   }
+
+  const medName=(value:any)=>{
+
+    if (value===0) {
+      return 'M01AB'
+    }
+    else if (value===1) {
+      return 'M01AE'
+    }else if (value===2) {
+      return 'N02BA'
+    }else if (value===3) {
+      return 'N02BE'
+    }else if (value===4) {
+      return 'N05B'
+    }else if (value===5) {
+      return 'N05C'
+    }else if (value===6) {
+      return 'R03'
+    }else if (value===7) {
+      return 'R06'
+    }
+  }
+
+  const weekdayName=(value:any)=>{
+
+    if (value===0) {
+      return 'Monday'
+    }
+    else if (value===1) {
+      return 'Tuesday'
+    }else if (value===2) {
+      return 'Wednesday'
+    }else if (value===3) {
+      return 'Thursday'
+    }else if (value===4) {
+      return 'Friday'
+    }else if (value===5) {
+      return 'Saturday'
+    }else if (value===6) {
+      return 'Sunday'
+    }
+  }
+
+  const getTableData=()=>{
+
+    const result=[]
+
+    if (PredictionData) {
+      for (const date in PredictionData.Drug) {
+
+        result.push(
+          <>
+          <tr>
+          <td>{date}</td>
+          <td>{PredictionData.Year[date]}</td>
+          <td>{PredictionData.Month[date]}</td>
+          <td>{PredictionData.day[date]}</td>
+          <td>{weekdayName(PredictionData['Weekday Name'][date])}</td>
+          <td>{medName(PredictionData.Drug[date])}</td>
+          <td>{(PredictionData.predicted_quantity[date]).toFixed(4)}</td>
+          </tr>
+          </>
+        )
+        
+      }
+      
+    }
+
+    return result
+}
 
   return(
       <>
@@ -468,12 +553,12 @@ export default function ViewPredictionPage({pharm, data=[]}:any) {
           <div className="row col col-md-12 form-outline form-white mb-4">
             <div className="col col-md-6 form-group">
               <label className="fw-bold" >Predict From :</label>
-              <input ref={dateInput1} onChange={handleInputChange} type="date" className="form-control form-control-lg"  name="firstDate" required/>
+              <input ref={dateInput1} onChange={handleInputChange} type="date" className="form-control form-control-lg"  name="startDate" required/>
             </div>
 
             <div className="col col-md-6 form-group">
               <label className="fw-bold" >Predict To :</label>
-              <input ref={dateInput2} onChange={handleInputChange} type="date" className="form-control form-control-lg"  name="lastDate" required/>
+              <input ref={dateInput2} onChange={handleInputChange} type="date" className="form-control form-control-lg"  name="endDate" required/>
             </div>
             
           </div>
@@ -481,11 +566,12 @@ export default function ViewPredictionPage({pharm, data=[]}:any) {
           <div className="row col col-md-12 form-outline form-white mb-4">
           <div className="col col-md-12 form-group">
               <label className="fw-bold" >Medicine Category :</label>
-              <select onChange={handleInputChange} className="form-control form-control-lg" name='medicineCategory' required>
+              <select onChange={handleInputChange} className="form-control form-control-lg" name='drug' required>
                 <option></option>
-                <option value={'1'}>M01AB</option>
-                <option value={'2'}>M01AE</option>
-                <option value={'3'}>N02BE/B</option>
+                <option value={'0'}>M01AB</option>
+                <option value={'1'}>M01AE</option>
+                <option value={'2'}>N02BA</option>
+                <option value={'3'}>N02BE</option>
                 <option value={'4'}>N05B</option>
                 <option value={'5'}>N05C</option>
                 <option value={'6'}>R03</option>
@@ -509,11 +595,41 @@ export default function ViewPredictionPage({pharm, data=[]}:any) {
           </div>
           </div>
         </form>
-          
 
-          {/* <hr />
+          <hr />
 
-          <div className="d-flex justify-content-between col-md-8 p-1 m-3">
+
+
+          <div className="col col-md-12 table-responsive p-3" style={{height:'10%',overflowY:'scroll'}}>
+            <div className="col col-md-12 d-flex justify-content-center bg-dark text-warning">
+              <h5 className="m-1 fw-bold">Prediction Results</h5>
+            </div>
+            <div className="table-responsive" >
+            	<table className="table table-bordered table-striped table-hover " >
+                    <thead >
+                        <tr className="bg-secondary">
+                        <th>Full Date</th>
+                        <th>Year</th>
+                        <th>Month</th>
+                        <th>Day</th>
+                        <th>WeekDay Name</th>
+                        <th>Drug</th>
+                        <th>Predicted Quantity</th>
+                        
+                        </tr>
+                        
+                    </thead>
+                    <tbody>
+                        {
+                            getTableData()
+
+                        }
+                    </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/*<div className="d-flex justify-content-between col-md-8 p-1 m-3">
             <div className="col-md-4 p-1">
               <label className="fw-bold">Select Drug Name</label>
             <select
@@ -596,9 +712,6 @@ export default function ViewPredictionPage({pharm, data=[]}:any) {
               </>
               )
           } */}
-
-          
-
         
 
     </section>

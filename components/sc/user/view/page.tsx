@@ -197,7 +197,6 @@ export default function ViewUserPage({pharm}:any) {
             toastId=toast.loading('Loading, please wait...',{
                 id:toastId
             })
-            console.log(oneUserData);
     
             let response=await axios.patch(`/api/v1/controller/user?action=editUserData`,oneUserData)            
             toast.dismiss(toastId)

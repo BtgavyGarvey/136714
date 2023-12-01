@@ -8,6 +8,7 @@ import Morgan from 'morgan'
 import mongoose from "mongoose";
 import Pharmacy from "../../model/pharmacy";
 import { Today } from "../../../../../../components/sc/layout/topNav";
+import axios from "axios";
 
 
 // DB CONNECTION
@@ -33,10 +34,10 @@ export async function POST(request:NextRequest) {
       MiddleWare(request,NextResponse,morgan)
       responseData=await newSale(body)
     }
-    // else if (params==='checkcode') {
-    //   MiddleWare(request,NextResponse,morgan)
-    //   responseData=await checkResetPasswordCode(body)
-    // }
+    else if (params==='predict') {
+      MiddleWare(request,NextResponse,morgan)
+      responseData=await predict(body)
+    }
     return NextResponse.json(responseData)
     
 }
@@ -577,7 +578,8 @@ export const getDashboardData = async (id:any) => {
       totalData.N05B = getCountByCategory(results, 'N05B');
       totalData.R03 = getCountByCategory(results, 'R03');
       totalData.R06 = getCountByCategory(results, 'R06');
-      totalData.N02BEB = getCountByCategory(results, 'N02BE/B');
+      totalData.N02BA = getCountByCategory(results, 'N02BA');
+      totalData.N02BE = getCountByCategory(results, 'N02BE');
       totalData.todaySales = todaySales;
       totalData.hourSales = hourSales;
       totalData.weekSales = weekSales;
@@ -787,7 +789,16 @@ export const getCategoryData = async (id:any) => {
             ],
             },
         },
-        N02BEB: {
+        N02BE: {
+            $sum: {
+            $cond: [
+                { $gte: ["$details.date", dateHour.thisMonth] },
+                "$details.moreDateDetails.moreHourDetails.saleAmount",
+                0,
+            ],
+            },
+        },
+        N02BA: {
             $sum: {
             $cond: [
                 { $gte: ["$details.date", dateHour.thisMonth] },
@@ -818,4 +829,40 @@ export const getCategoryData = async (id:any) => {
         return responseData
     }
 };
+
+export const predict=async(body:any)=>{
+
+    let responseData={
+        message:'',
+        success:false,
+        prediction:[]
+    }
+
+    let data={
+        drug:parseInt(body.drug),
+        startDate:body.startDate,
+        endDate:body.endDate,
+    }
+
+    
+    const url = 'http://127.0.0.1:5000/api/v1/predict'
+  
+    try {
+      let response =await axios.post(url, data)
+
+      responseData.prediction=response.data
+      responseData.success=true
+
+    //   console.log(responseData)
+
+      return responseData
+    } catch (error) {
+        console.log(error);
+        responseData.message='Server error has ocurred.'      
+        return responseData
+      
+    }
+  
+    
+  }
 
