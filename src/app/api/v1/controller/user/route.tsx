@@ -730,6 +730,11 @@ export const forgotPassword = async (body: { username: any; }) => {
       return responseData
     }
 
+    if (!user.verified) {
+      responseData.message='Email not verified.'  
+      return responseData
+    }
+
     // Delete existing token for the user from DB if it exists
     await Token.deleteMany({ id: user.id });
 
