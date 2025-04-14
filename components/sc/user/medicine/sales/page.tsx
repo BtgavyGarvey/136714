@@ -39,11 +39,11 @@ export default function ViewMedicinePage({pharm, drugs}:any) {
     const [result, setResult]=React.useState(drugs)
 
     if (result) {
-
         for (let i = 0; i < result.length; i++) {
-            checkRef[`checkBox${i}`]=React.useRef()
-            inputRef[`input${i}`]=React.useRef()
-            totalState[`total${i}`]=''
+            // Initialize refs outside the loop, so useRef is not inside the loop
+            if (!checkRef[`checkBox${i}`]) checkRef[`checkBox${i}`] = React.useRef();
+            if (!inputRef[`input${i}`]) inputRef[`input${i}`] = React.useRef();
+            if (!totalState[`total${i}`]) totalState[`total${i}`] = '';
         }
     }
 
