@@ -298,7 +298,7 @@ export const newPharmacy=async(value: undefined)=>{
 
     const sanitizedMessage = await sanitizeMessage(message);
 
-    sendEmail(subject,sanitizedMessage,send_to,sent_from)
+    await sendEmail(subject,sanitizedMessage,send_to,sent_from)
 
     responseData.success=true
 
@@ -405,7 +405,7 @@ export const newUser=async(value: undefined)=>{
 
     const sanitizedMessage = await sanitizeMessage(message);
 
-    sendEmail(subject,sanitizedMessage,send_to,sent_from)
+    await sendEmail(subject,sanitizedMessage,send_to,sent_from)
 
     responseData.success=true
 
@@ -551,7 +551,7 @@ export const loginUser2 = async (username: string, password: any) => {
 
       const sanitizedMessage = await sanitizeMessage(message);
 
-      sendEmail(subject, sanitizedMessage, send_to, sent_from);
+      await sendEmail(subject, sanitizedMessage, send_to, sent_from);
 
       responseData.success=true
       return responseData
@@ -768,7 +768,7 @@ export const forgotPassword = async (body: { username: any; }) => {
 
         const sanitizedMessage = await sanitizeMessage(message);
 
-      sendEmail(subject, sanitizedMessage, send_to, sent_from);
+      await sendEmail(subject, sanitizedMessage, send_to, sent_from);
 
       responseData.message='Password reset code sent to your email.'      
       responseData.success=true    
@@ -842,7 +842,7 @@ export const resetPassword = async (body: { password: any; username: any; }) => 
       responseData.message='User not found, please sign up.'      
       return responseData
     }
-    
+
     // Update user password
     user.password = password;
     await user.save();
@@ -861,7 +861,7 @@ export const resetPassword = async (body: { password: any; username: any; }) => 
     try {
       const sanitizedMessage = await sanitizeMessage(message);
 
-      sendEmail(subject, sanitizedMessage, send_to, sent_from);
+      await sendEmail(subject, sanitizedMessage, send_to, sent_from);
 
       responseData.message='Password Reset Successful. Please Login.'     
       responseData.success=true     

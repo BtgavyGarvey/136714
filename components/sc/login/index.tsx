@@ -190,7 +190,7 @@ export default function Login(){
                         </div>
 
                         <div>
-                        <p className="mb-0">Don't have an account? <a href="/sc/register" className="text-white-50 fw-bold">Sign Up</a>
+                        <p className="mb-0">Don&apos;t have an account? <a href="/sc/register" className="text-white-50 fw-bold">Sign Up</a>
                         </p>
                         </div>
 
