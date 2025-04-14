@@ -20,15 +20,7 @@ export default function ViewMedicinePage({pharm, drugs}:any) {
 
     let toastId:any
 
-    let checkRef={
-
-    }
-    let inputRef={
-
-    }
-    let totalState={
-
-    }
+    
 
     const paidAmount=React.useRef()
     const saveBtn=React.useRef()
@@ -38,14 +30,18 @@ export default function ViewMedicinePage({pharm, drugs}:any) {
     const [total_Price, setTotal_Price]=React.useState(0)
     const [result, setResult]=React.useState(drugs)
 
-    if (result) {
-        for (let i = 0; i < result.length; i++) {
-            // Initialize refs outside the loop, so useRef is not inside the loop
-            if (!checkRef[`checkBox${i}`]) checkRef[`checkBox${i}`] = React.useRef();
-            if (!inputRef[`input${i}`]) inputRef[`input${i}`] = React.useRef();
-            if (!totalState[`total${i}`]) totalState[`total${i}`] = '';
+    const checkRef = React.useRef([]);
+    const inputRef = React.useRef([]);
+    const totalState = React.useRef([]);
+
+    // Initialize refs dynamically inside useEffect
+    React.useEffect(() => {
+        if (result) {
+            checkRef.current = result.map((_, i) => React.createRef());
+            inputRef.current = result.map((_, i) => React.createRef());
+            totalState.current = new Array(result.length).fill('');
         }
-    }
+    }, [result]);  // Runs every time 'result' changes
 
     const getDrugsData=async()=>{
 
